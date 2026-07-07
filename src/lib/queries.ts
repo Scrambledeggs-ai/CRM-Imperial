@@ -27,7 +27,10 @@ export async function getTopicsWithCounts() {
   }));
 }
 
-export async function getContacts(topicId?: string): Promise<ContactWithTopics[]> {
+export async function getContacts(
+  topicId?: string,
+  search?: string,
+): Promise<ContactWithTopics[]> {
   const supabase = getSupabase();
 
   let contactIds: string[] | null = null;
@@ -41,13 +44,40 @@ export async function getContacts(topicId?: string): Promise<ContactWithTopics[]
     if (contactIds.length === 0) return [];
   }
 
+  let searchIds: Set<string> | null = null;
+  if (search?.trim()) {
+    const term = `%${search.trim()}%`;
+    const [{ data: byField, error: e1 }, { data: byTopic, error: e2 }] =
+      await Promise.all([
+        supabase.from("contacts").select("id").or(`name.ilike.${term},notes.ilike.${term}`),
+        supabase
+          .from("contact_topics")
+          .select("contact_id, topics!inner(name)")
+          .ilike("topics.name", term),
+      ]);
+    if (e1) throw new Error(e1.message);
+    if (e2) throw new Error(e2.message);
+    const topicRows = (byTopic ?? []) as unknown as { contact_id: string }[];
+    searchIds = new Set([
+      ...(byField ?? []).map((r) => r.id),
+      ...topicRows.map((r) => r.contact_id),
+    ]);
+    if (searchIds.size === 0) return [];
+  }
+
+  const finalIds =
+    contactIds && searchIds
+      ? contactIds.filter((id) => searchIds!.has(id))
+      : (contactIds ?? (searchIds ? [...searchIds] : null));
+  if (finalIds && finalIds.length === 0) return [];
+
   let query = supabase
     .from("contacts")
     .select(
       "id, name, skool_url, notes, created_at, contact_topics(context, pending_action, topics(id, name))",
     )
     .order("created_at", { ascending: false });
-  if (contactIds) query = query.in("id", contactIds);
+  if (finalIds) query = query.in("id", finalIds);
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
@@ -82,7 +112,10 @@ export async function getContacts(topicId?: string): Promise<ContactWithTopics[]
   }));
 }
 
-export async function getPosts(topicId?: string): Promise<PostWithTopics[]> {
+export async function getPosts(
+  topicId?: string,
+  search?: string,
+): Promise<PostWithTopics[]> {
   const supabase = getSupabase();
 
   let postIds: string[] | null = null;
@@ -96,13 +129,40 @@ export async function getPosts(topicId?: string): Promise<PostWithTopics[]> {
     if (postIds.length === 0) return [];
   }
 
+  let searchIds: Set<string> | null = null;
+  if (search?.trim()) {
+    const term = `%${search.trim()}%`;
+    const [{ data: byField, error: e1 }, { data: byTopic, error: e2 }] =
+      await Promise.all([
+        supabase.from("posts").select("id").or(`title.ilike.${term},notes.ilike.${term}`),
+        supabase
+          .from("post_topics")
+          .select("post_id, topics!inner(name)")
+          .ilike("topics.name", term),
+      ]);
+    if (e1) throw new Error(e1.message);
+    if (e2) throw new Error(e2.message);
+    const topicRows = (byTopic ?? []) as unknown as { post_id: string }[];
+    searchIds = new Set([
+      ...(byField ?? []).map((r) => r.id),
+      ...topicRows.map((r) => r.post_id),
+    ]);
+    if (searchIds.size === 0) return [];
+  }
+
+  const finalIds =
+    postIds && searchIds
+      ? postIds.filter((id) => searchIds!.has(id))
+      : (postIds ?? (searchIds ? [...searchIds] : null));
+  if (finalIds && finalIds.length === 0) return [];
+
   let query = supabase
     .from("posts")
     .select(
       "id, title, url, notes, pending_action, created_at, post_topics(topics(id, name))",
     )
     .order("created_at", { ascending: false });
-  if (postIds) query = query.in("id", postIds);
+  if (finalIds) query = query.in("id", finalIds);
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);

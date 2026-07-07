@@ -1,19 +1,20 @@
 import { getContacts, getPosts, getTopicsWithCounts } from "@/lib/queries";
 import { TopicFilterChips } from "./TopicFilterChips";
+import { SearchBox } from "./SearchBox";
 import { ContactCard } from "./ContactCard";
 import { PostCard } from "./PostCard";
 
 export default async function AppHome({
   searchParams,
 }: {
-  searchParams: Promise<{ topic?: string }>;
+  searchParams: Promise<{ topic?: string; search?: string }>;
 }) {
-  const { topic: topicId } = await searchParams;
+  const { topic: topicId, search } = await searchParams;
 
   const [topics, contacts, posts] = await Promise.all([
     getTopicsWithCounts(),
-    getContacts(topicId),
-    getPosts(topicId),
+    getContacts(topicId, search),
+    getPosts(topicId, search),
   ]);
 
   return (
@@ -25,7 +26,10 @@ export default async function AppHome({
         </p>
       </header>
 
-      <TopicFilterChips topics={topics} activeTopicId={topicId} basePath="/app" />
+      <div className="flex flex-col gap-3">
+        <SearchBox search={search} topicId={topicId} />
+        <TopicFilterChips topics={topics} activeTopicId={topicId} basePath="/app" />
+      </div>
 
       <section className="grid gap-8 sm:grid-cols-2">
         <div className="flex flex-col gap-3">
@@ -33,7 +37,9 @@ export default async function AppHome({
             Contactos ({contacts.length})
           </h2>
           {contacts.length === 0 && (
-            <p className="text-sm text-muted">Nada por acá todavía.</p>
+            <p className="text-sm text-muted">
+              {search ? "Nada coincide con esa búsqueda." : "Nada por acá todavía."}
+            </p>
           )}
           {contacts.map((contact) => (
             <ContactCard key={contact.id} contact={contact} />
@@ -45,7 +51,9 @@ export default async function AppHome({
             Posts ({posts.length})
           </h2>
           {posts.length === 0 && (
-            <p className="text-sm text-muted">Nada por acá todavía.</p>
+            <p className="text-sm text-muted">
+              {search ? "Nada coincide con esa búsqueda." : "Nada por acá todavía."}
+            </p>
           )}
           {posts.map((post) => (
             <PostCard key={post.id} post={post} />

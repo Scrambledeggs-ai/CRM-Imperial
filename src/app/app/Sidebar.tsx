@@ -19,7 +19,7 @@ export function Sidebar() {
 
   return (
     <>
-      <aside className="w-[220px] shrink-0 bg-background border-r border-panel-border flex flex-col p-4 gap-6 min-h-screen">
+      <aside className="w-[220px] shrink-0 bg-background border-r border-panel-border flex flex-col p-4 gap-6 sticky top-0 h-screen overflow-y-auto">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Image
