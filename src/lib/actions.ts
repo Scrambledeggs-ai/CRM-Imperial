@@ -57,6 +57,72 @@ export async function createContact(formData: FormData) {
   }
 
   revalidatePath("/");
+  revalidatePath("/app");
+}
+
+export async function updateContactField(
+  contactId: string,
+  field: "name" | "skool_url" | "notes",
+  value: string,
+) {
+  const supabase = getSupabase();
+  const clean = value.trim();
+  const patch =
+    field === "name"
+      ? { name: clean || "Sin nombre" }
+      : field === "skool_url"
+        ? { skool_url: clean || null }
+        : { notes: clean || null };
+  const { error } = await supabase.from("contacts").update(patch).eq("id", contactId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/app/contactos/${contactId}`);
+  revalidatePath("/app");
+}
+
+export async function updatePostField(
+  postId: string,
+  field: "title" | "url" | "notes",
+  value: string,
+) {
+  const supabase = getSupabase();
+  const clean = value.trim();
+  const patch =
+    field === "title"
+      ? { title: clean || "Sin título" }
+      : field === "url"
+        ? { url: clean || "https://" }
+        : { notes: clean || null };
+  const { error } = await supabase.from("posts").update(patch).eq("id", postId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/app/posts/${postId}`);
+  revalidatePath("/app");
+}
+
+export async function updateContactTopicPending(
+  contactId: string,
+  topicId: string,
+  pendingAction: string,
+) {
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from("contact_topics")
+    .update({ pending_action: pendingAction.trim() || null })
+    .eq("contact_id", contactId)
+    .eq("topic_id", topicId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/app/contactos/${contactId}`);
+  revalidatePath("/app/pendientes");
+}
+
+export async function updatePostPending(postId: string, pendingAction: string) {
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from("posts")
+    .update({ pending_action: pendingAction.trim() || null })
+    .eq("id", postId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/app/posts/${postId}`);
+  revalidatePath("/app/pendientes");
 }
 
 export async function toggleContactPendingDone(
@@ -71,8 +137,8 @@ export async function toggleContactPendingDone(
     .eq("contact_id", contactId)
     .eq("topic_id", topicId);
   if (error) throw new Error(error.message);
-  revalidatePath("/pendientes");
-  revalidatePath("/");
+  revalidatePath("/app/pendientes");
+  revalidatePath("/app");
 }
 
 export async function togglePostPendingDone(postId: string, done: boolean) {
@@ -82,8 +148,8 @@ export async function togglePostPendingDone(postId: string, done: boolean) {
     .update({ pending_done: done })
     .eq("id", postId);
   if (error) throw new Error(error.message);
-  revalidatePath("/pendientes");
-  revalidatePath("/");
+  revalidatePath("/app/pendientes");
+  revalidatePath("/app");
 }
 
 export async function createPost(formData: FormData) {
@@ -112,5 +178,5 @@ export async function createPost(formData: FormData) {
     if (linkError) throw new Error(linkError.message);
   }
 
-  revalidatePath("/");
+  revalidatePath("/app");
 }

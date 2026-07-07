@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -17,10 +19,11 @@ export const metadata: Metadata = {
   description: "Contactos y posts de comunidad, cruzados por tema.",
 };
 
+// Sin preferencia guardada, arranca en oscuro (es el look pensado para la app).
 const themeInitScript = `
 (function () {
   var stored = localStorage.getItem("theme");
-  var dark = stored ? stored === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  var dark = stored ? stored === "dark" : true;
   document.documentElement.classList.toggle("dark", dark);
 })();
 `;
@@ -33,7 +36,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${spaceGrotesk.variable} ${plexMono.variable} h-full antialiased dark`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />

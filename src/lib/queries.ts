@@ -131,6 +131,88 @@ export async function getPosts(topicId?: string): Promise<PostWithTopics[]> {
   }));
 }
 
+export async function getContact(id: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("contacts")
+    .select(
+      "id, name, skool_url, notes, created_at, contact_topics(context, pending_action, pending_done, topics(id, name))",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+
+  type Row = {
+    id: string;
+    name: string;
+    skool_url: string | null;
+    notes: string | null;
+    created_at: string;
+    contact_topics: {
+      context: string | null;
+      pending_action: string | null;
+      pending_done: boolean;
+      topics: Topic | null;
+    }[];
+  };
+  const row = data as unknown as Row;
+
+  return {
+    id: row.id,
+    name: row.name,
+    skool_url: row.skool_url,
+    notes: row.notes,
+    created_at: row.created_at,
+    topics: (row.contact_topics ?? [])
+      .filter((ct) => ct.topics)
+      .map((ct) => ({
+        topic: ct.topics as Topic,
+        context: ct.context,
+        pending_action: ct.pending_action,
+        pending_done: ct.pending_done,
+      })),
+  };
+}
+
+export async function getPost(id: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("posts")
+    .select(
+      "id, title, url, notes, pending_action, pending_done, created_at, post_topics(topics(id, name))",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+
+  type Row = {
+    id: string;
+    title: string;
+    url: string;
+    notes: string | null;
+    pending_action: string | null;
+    pending_done: boolean;
+    created_at: string;
+    post_topics: { topics: Topic | null }[];
+  };
+  const row = data as unknown as Row;
+
+  return {
+    id: row.id,
+    title: row.title,
+    url: row.url,
+    notes: row.notes,
+    pending_action: row.pending_action,
+    pending_done: row.pending_done,
+    created_at: row.created_at,
+    topics: (row.post_topics ?? [])
+      .filter((pt) => pt.topics)
+      .map((pt) => pt.topics as Topic),
+  };
+}
+
 export async function getPendingItems() {
   const supabase = getSupabase();
 

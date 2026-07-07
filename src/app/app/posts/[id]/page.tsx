@@ -1,0 +1,96 @@
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { getPost } from "@/lib/queries";
+import { updatePostField } from "@/lib/actions";
+import { TopicChip } from "../../TopicChip";
+import { EditableField } from "../../EditableField";
+import { PostPendingRow } from "./PostPendingRow";
+
+function domainOf(url: string) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
+export default async function PostDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const post = await getPost(id);
+  if (!post) notFound();
+
+  return (
+    <div className="flex flex-col gap-8 max-w-4xl">
+      <Link href="/app" className="text-sm text-muted hover:text-accent w-fit">
+        ← Volver
+      </Link>
+
+      <header>
+        <h1 className="text-[30px] font-bold leading-tight">
+          <EditableField
+            value={post.title}
+            onSave={updatePostField.bind(null, post.id, "title")}
+          />
+        </h1>
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {post.topics.map((t) => (
+            <TopicChip key={t.id} name={t.name} />
+          ))}
+        </div>
+      </header>
+
+      <div className="rounded-[var(--radius-panel)] border border-panel-border bg-panel p-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="text-lg shrink-0">↗</span>
+          <div className="min-w-0">
+            <p className="text-sm font-medium truncate">
+              <EditableField
+                value={post.url}
+                onSave={updatePostField.bind(null, post.id, "url")}
+              />
+            </p>
+            <p className="text-xs text-muted truncate">{domainOf(post.url)}</p>
+          </div>
+        </div>
+        <a
+          href={post.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 px-3 py-1.5 rounded-[var(--radius-control)] text-sm font-medium bg-accent text-accent-ink"
+        >
+          Abrir post ↗
+        </a>
+      </div>
+
+      <section className="grid gap-6 sm:grid-cols-[1.3fr_1fr]">
+        <div className="rounded-[var(--radius-panel)] border border-panel-border bg-panel p-5">
+          <h2 className="font-mono text-[13px] uppercase tracking-wide text-muted mb-3">
+            Notas
+          </h2>
+          <EditableField
+            as="textarea"
+            value={post.notes ?? ""}
+            placeholder="Doble click para agregar notas"
+            onSave={updatePostField.bind(null, post.id, "notes")}
+            className="text-sm leading-relaxed block"
+          />
+        </div>
+
+        <div className="rounded-[var(--radius-panel)] border border-panel-border bg-panel p-5">
+          <h2 className="font-mono text-[13px] uppercase tracking-wide text-muted mb-3">
+            Pendiente
+          </h2>
+          <PostPendingRow
+            postId={post.id}
+            pendingAction={post.pending_action}
+            pendingDone={post.pending_done}
+          />
+        </div>
+      </section>
+    </div>
+  );
+}
