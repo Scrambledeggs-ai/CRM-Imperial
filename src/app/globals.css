@@ -42,6 +42,10 @@
   --radius-control: 10px;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--bg-content);
   color: var(--foreground);

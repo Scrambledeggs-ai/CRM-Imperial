@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ThemeToggle } from "./ThemeToggle";
 
 const FEATURES = [
   {
@@ -25,10 +26,15 @@ export default function LandingPage() {
           <span className="font-semibold text-sm">CRM Imperial</span>
         </div>
         <div className="flex items-center gap-6 text-sm text-muted">
-          <a href="#landing-features" className="hover:text-foreground">
-            Producto
+          <a
+            href="https://github.com/Scrambledeggs-ai/CRM-Imperial"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-foreground"
+          >
+            Comunidad
           </a>
-          <span>Comunidad</span>
+          <ThemeToggle />
           <Link
             href="/app"
             className="px-4 py-2 rounded-[var(--radius-control)] bg-accent text-accent-ink font-medium"
@@ -54,12 +60,6 @@ export default function LandingPage() {
             >
               Entrar
             </Link>
-            <a
-              href="#landing-features"
-              className="px-5 py-3 rounded-[var(--radius-control)] border border-panel-border font-medium"
-            >
-              Ver cómo funciona
-            </a>
           </div>
         </div>
         <NodesIllustration />

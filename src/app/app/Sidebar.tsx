@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { NewItemModal } from "./NewItemModal";
+import { FeedbackCta } from "./FeedbackCta";
+import { ThemeToggle } from "../ThemeToggle";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -18,15 +20,18 @@ export function Sidebar() {
   return (
     <>
       <aside className="w-[220px] shrink-0 bg-background border-r border-panel-border flex flex-col p-4 gap-6 min-h-screen">
-        <Link href="/" className="flex items-center gap-2">
-          <Image
-            src="/imperio-logo-light.png"
-            alt="Imperio"
-            width={28}
-            height={28}
-          />
-          <span className="font-semibold text-sm">CRM Imperial</span>
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/imperio-logo-light.png"
+              alt="Imperio"
+              width={28}
+              height={28}
+            />
+            <span className="font-semibold text-sm">CRM Imperial</span>
+          </Link>
+          <ThemeToggle />
+        </div>
 
         <nav className="flex flex-col gap-1">
           <Link href="/app" className={navItemClass(pathname === "/app")}>
@@ -56,14 +61,7 @@ export function Sidebar() {
             + Post
           </button>
 
-          <a
-            href="mailto:flow@zenau.ai?subject=CRM%20Imperial%20v2.0%20-%20idea"
-            className="mt-4 text-center px-3 py-2 rounded-[var(--radius-control)] text-xs font-mono border border-dashed border-panel-border text-muted hover:text-accent hover:border-accent"
-          >
-            ¿Querés v2.0?
-            <br />
-            Pedí tu función →
-          </a>
+          <FeedbackCta />
         </div>
       </aside>
 
