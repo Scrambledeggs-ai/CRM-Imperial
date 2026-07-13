@@ -3,6 +3,8 @@ import { TopicChip } from "./TopicChip";
 import type { PostWithTopics } from "@/lib/types";
 
 export function PostCard({ post }: { post: PostWithTopics }) {
+  const pending = post.pendings.filter((p) => !p.done);
+
   return (
     <Link
       href={`/app/posts/${post.id}`}
@@ -15,8 +17,8 @@ export function PostCard({ post }: { post: PostWithTopics }) {
       {post.notes && (
         <p className="text-sm text-muted mt-1 line-clamp-2">{post.notes}</p>
       )}
-      {post.pending_action && (
-        <p className="text-sm text-amber-400 mt-2">⏳ {post.pending_action}</p>
+      {pending.length > 0 && (
+        <p className="text-sm text-amber-400 mt-2">⏳ {pending[0].text}</p>
       )}
     </Link>
   );

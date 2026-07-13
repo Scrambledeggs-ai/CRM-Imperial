@@ -58,15 +58,17 @@ export async function createContact(formData: FormData) {
   const topics = await upsertTopics(topicNames);
   if (topics.length > 0) {
     const { error: linkError } = await supabase.from("contact_topics").upsert(
-      topics.map((topic) => ({
-        contact_id: contact.id,
-        topic_id: topic.id,
-        pending_action: pendingAction,
-        pending_date: pendingDate,
-      })),
+      topics.map((topic) => ({ contact_id: contact.id, topic_id: topic.id })),
       { onConflict: "contact_id,topic_id" },
     );
     if (linkError) throw new Error(linkError.message);
+  }
+
+  if (pendingAction) {
+    const { error: pendingError } = await supabase
+      .from("pendings")
+      .insert({ text: pendingAction, due_date: pendingDate, contact_id: contact.id });
+    if (pendingError) throw new Error(pendingError.message);
   }
 
   await fireWebhook("contact.created", {
@@ -120,111 +122,172 @@ export async function updatePostField(
   revalidatePath("/app");
 }
 
-export async function updateContactTopicPending(
-  contactId: string,
-  topicId: string,
-  pendingAction: string,
-) {
-  const supabase = getSupabase();
-  const { error } = await supabase
-    .from("contact_topics")
-    .update({ pending_action: pendingAction.trim() || null })
-    .eq("contact_id", contactId)
-    .eq("topic_id", topicId);
-  if (error) throw new Error(error.message);
-  revalidatePath(`/app/contactos/${contactId}`);
-  revalidatePath("/app/pendientes");
+type PendingTarget = { contactId: string } | { postId: string };
+
+function pendingOwnerColumn(target: PendingTarget) {
+  return "contactId" in target
+    ? { column: "contact_id" as const, id: target.contactId, type: "contact" as const }
+    : { column: "post_id" as const, id: target.postId, type: "post" as const };
 }
 
-export async function updateContactTopicPendingDate(
-  contactId: string,
-  topicId: string,
-  pendingDate: string,
-) {
+function revalidatePendingTarget(target: PendingTarget) {
+  if ("contactId" in target) revalidatePath(`/app/contactos/${target.contactId}`);
+  else revalidatePath(`/app/posts/${target.postId}`);
+  revalidatePath("/app/pendientes");
+  revalidatePath("/app");
+}
+
+export async function addPending(target: PendingTarget, text: string) {
+  const clean = text.trim();
+  if (!clean) throw new Error("El pendiente no puede estar vacío.");
   const supabase = getSupabase();
-  const { error } = await supabase
-    .from("contact_topics")
-    .update({ pending_date: pendingDate || null })
-    .eq("contact_id", contactId)
-    .eq("topic_id", topicId);
+  const { error } = await supabase.from("pendings").insert(
+    "contactId" in target
+      ? { text: clean, contact_id: target.contactId }
+      : { text: clean, post_id: target.postId },
+  );
+  if (error) throw new Error(error.message);
+  revalidatePendingTarget(target);
+}
+
+export async function updatePendingText(pendingId: string, text: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("pendings")
+    .update({ text: text.trim() })
+    .eq("id", pendingId)
+    .select("contact_id, post_id")
+    .single();
+  if (error) throw new Error(error.message);
+  revalidatePendingTarget(
+    data.contact_id ? { contactId: data.contact_id } : { postId: data.post_id! },
+  );
+}
+
+export async function updatePendingDate(pendingId: string, dueDate: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("pendings")
+    .update({ due_date: dueDate || null })
+    .eq("id", pendingId)
+    .select("text, due_date, contact_id, post_id")
+    .single();
   if (error) throw new Error(error.message);
 
-  const { data: row } = await supabase
-    .from("contact_topics")
-    .select("pending_action")
-    .eq("contact_id", contactId)
-    .eq("topic_id", topicId)
-    .maybeSingle();
-  await fireWebhook("contact.pending_updated", {
-    type: "contact",
-    id: contactId,
-    pending_action: row?.pending_action ?? null,
-    pending_date: pendingDate || null,
+  const target: PendingTarget = data.contact_id
+    ? { contactId: data.contact_id }
+    : { postId: data.post_id! };
+  const owner = pendingOwnerColumn(target);
+  await fireWebhook("pending.updated", {
+    type: owner.type,
+    id: owner.id,
+    pending_action: data.text,
+    pending_date: data.due_date,
   });
 
-  revalidatePath(`/app/contactos/${contactId}`);
-  revalidatePath("/app/pendientes");
+  revalidatePendingTarget(target);
 }
 
-export async function updatePostPending(postId: string, pendingAction: string) {
+export async function togglePendingDone(pendingId: string, done: boolean) {
   const supabase = getSupabase();
-  const { error } = await supabase
-    .from("posts")
-    .update({ pending_action: pendingAction.trim() || null })
-    .eq("id", postId);
+  const { data, error } = await supabase
+    .from("pendings")
+    .update({ done })
+    .eq("id", pendingId)
+    .select("contact_id, post_id")
+    .single();
   if (error) throw new Error(error.message);
-  revalidatePath(`/app/posts/${postId}`);
-  revalidatePath("/app/pendientes");
+  revalidatePendingTarget(
+    data.contact_id ? { contactId: data.contact_id } : { postId: data.post_id! },
+  );
 }
 
-export async function updatePostPendingDate(postId: string, pendingDate: string) {
+export async function deletePending(pendingId: string) {
   const supabase = getSupabase();
-  const { error } = await supabase
-    .from("posts")
-    .update({ pending_date: pendingDate || null })
-    .eq("id", postId);
+  const { data, error } = await supabase
+    .from("pendings")
+    .delete()
+    .eq("id", pendingId)
+    .select("contact_id, post_id")
+    .single();
   if (error) throw new Error(error.message);
-
-  const { data: row } = await supabase
-    .from("posts")
-    .select("pending_action")
-    .eq("id", postId)
-    .maybeSingle();
-  await fireWebhook("post.pending_updated", {
-    type: "post",
-    id: postId,
-    pending_action: row?.pending_action ?? null,
-    pending_date: pendingDate || null,
-  });
-
-  revalidatePath(`/app/posts/${postId}`);
-  revalidatePath("/app/pendientes");
+  revalidatePendingTarget(
+    data.contact_id ? { contactId: data.contact_id } : { postId: data.post_id! },
+  );
 }
 
-export async function addContactTopic(contactId: string, topicName: string) {
-  const name = topicName.trim().toLowerCase();
-  if (!name) throw new Error("El tema no puede estar vacío.");
-
+export async function updateContactTopics(contactId: string, raw: string) {
+  const names = parseTopicNames(raw);
   const supabase = getSupabase();
-  const [topic] = await upsertTopics([name]);
-  const { error } = await supabase
+  const topics = await upsertTopics(names);
+
+  const { data: current, error: currentError } = await supabase
     .from("contact_topics")
-    .upsert({ contact_id: contactId, topic_id: topic.id }, { onConflict: "contact_id,topic_id" });
-  if (error) throw new Error(error.message);
+    .select("topic_id")
+    .eq("contact_id", contactId);
+  if (currentError) throw new Error(currentError.message);
+
+  const currentIds = new Set((current ?? []).map((r) => r.topic_id));
+  const nextIds = new Set(topics.map((t) => t.id));
+  const toAdd = topics.filter((t) => !currentIds.has(t.id));
+  const toRemove = [...currentIds].filter((id) => !nextIds.has(id));
+
+  if (toAdd.length > 0) {
+    const { error } = await supabase
+      .from("contact_topics")
+      .upsert(
+        toAdd.map((t) => ({ contact_id: contactId, topic_id: t.id })),
+        { onConflict: "contact_id,topic_id" },
+      );
+    if (error) throw new Error(error.message);
+  }
+  if (toRemove.length > 0) {
+    const { error } = await supabase
+      .from("contact_topics")
+      .delete()
+      .eq("contact_id", contactId)
+      .in("topic_id", toRemove);
+    if (error) throw new Error(error.message);
+  }
+
   revalidatePath(`/app/contactos/${contactId}`);
   revalidatePath("/app");
 }
 
-export async function addPostTopic(postId: string, topicName: string) {
-  const name = topicName.trim().toLowerCase();
-  if (!name) throw new Error("El tema no puede estar vacío.");
-
+export async function updatePostTopics(postId: string, raw: string) {
+  const names = parseTopicNames(raw);
   const supabase = getSupabase();
-  const [topic] = await upsertTopics([name]);
-  const { error } = await supabase
+  const topics = await upsertTopics(names);
+
+  const { data: current, error: currentError } = await supabase
     .from("post_topics")
-    .upsert({ post_id: postId, topic_id: topic.id }, { onConflict: "post_id,topic_id" });
-  if (error) throw new Error(error.message);
+    .select("topic_id")
+    .eq("post_id", postId);
+  if (currentError) throw new Error(currentError.message);
+
+  const currentIds = new Set((current ?? []).map((r) => r.topic_id));
+  const nextIds = new Set(topics.map((t) => t.id));
+  const toAdd = topics.filter((t) => !currentIds.has(t.id));
+  const toRemove = [...currentIds].filter((id) => !nextIds.has(id));
+
+  if (toAdd.length > 0) {
+    const { error } = await supabase
+      .from("post_topics")
+      .upsert(
+        toAdd.map((t) => ({ post_id: postId, topic_id: t.id })),
+        { onConflict: "post_id,topic_id" },
+      );
+    if (error) throw new Error(error.message);
+  }
+  if (toRemove.length > 0) {
+    const { error } = await supabase
+      .from("post_topics")
+      .delete()
+      .eq("post_id", postId)
+      .in("topic_id", toRemove);
+    if (error) throw new Error(error.message);
+  }
+
   revalidatePath(`/app/posts/${postId}`);
   revalidatePath("/app");
 }
@@ -287,33 +350,6 @@ export async function mergeTopics(sourceId: string, targetId: string) {
   revalidatePath("/app/pendientes");
 }
 
-export async function toggleContactPendingDone(
-  contactId: string,
-  topicId: string,
-  done: boolean,
-) {
-  const supabase = getSupabase();
-  const { error } = await supabase
-    .from("contact_topics")
-    .update({ pending_done: done })
-    .eq("contact_id", contactId)
-    .eq("topic_id", topicId);
-  if (error) throw new Error(error.message);
-  revalidatePath("/app/pendientes");
-  revalidatePath("/app");
-}
-
-export async function togglePostPendingDone(postId: string, done: boolean) {
-  const supabase = getSupabase();
-  const { error } = await supabase
-    .from("posts")
-    .update({ pending_done: done })
-    .eq("id", postId);
-  if (error) throw new Error(error.message);
-  revalidatePath("/app/pendientes");
-  revalidatePath("/app");
-}
-
 export async function createPost(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const url = String(formData.get("url") ?? "").trim();
@@ -327,13 +363,7 @@ export async function createPost(formData: FormData) {
   const supabase = getSupabase();
   const { data: post, error } = await supabase
     .from("posts")
-    .insert({
-      title,
-      url,
-      notes,
-      pending_action: pendingAction,
-      pending_date: pendingDate,
-    })
+    .insert({ title, url, notes })
     .select("id")
     .single();
   if (error) throw new Error(error.message);
@@ -345,6 +375,13 @@ export async function createPost(formData: FormData) {
       { onConflict: "post_id,topic_id" },
     );
     if (linkError) throw new Error(linkError.message);
+  }
+
+  if (pendingAction) {
+    const { error: pendingError } = await supabase
+      .from("pendings")
+      .insert({ text: pendingAction, due_date: pendingDate, post_id: post.id });
+    if (pendingError) throw new Error(pendingError.message);
   }
 
   await fireWebhook("post.created", {

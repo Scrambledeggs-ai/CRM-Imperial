@@ -3,9 +3,7 @@ import { TopicChip } from "./TopicChip";
 import type { ContactWithTopics } from "@/lib/types";
 
 export function ContactCard({ contact }: { contact: ContactWithTopics }) {
-  const pending = contact.topics.filter(
-    (t): t is typeof t & { pending_action: string } => Boolean(t.pending_action),
-  );
+  const pending = contact.pendings.filter((p) => !p.done);
 
   return (
     <Link
@@ -20,7 +18,7 @@ export function ContactCard({ contact }: { contact: ContactWithTopics }) {
         <p className="text-sm text-muted mt-1 line-clamp-2">{contact.notes}</p>
       )}
       {pending.length > 0 && (
-        <p className="text-sm text-amber-400 mt-2">⏳ {pending[0].pending_action}</p>
+        <p className="text-sm text-amber-400 mt-2">⏳ {pending[0].text}</p>
       )}
     </Link>
   );

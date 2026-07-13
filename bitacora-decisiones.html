@@ -118,8 +118,8 @@ footer{padding:32px 0; border-top:1px solid var(--line);}
     <p class="lead">No es el blueprint ni el changelog — es el registro de las preguntas que se plantearon durante el diseño y qué se resolvió en cada una, para no perder el hilo de por qué CRM Imperial quedó armado así.</p>
     <div class="meta-row">
       <span><b>Proyecto:</b> CRM Imperial</span>
-      <span><b>Última sesión:</b> 2026-07-12</span>
-      <span><b>Sesiones registradas:</b> 1</span>
+      <span><b>Última sesión:</b> 2026-07-13</span>
+      <span><b>Sesiones registradas:</b> 3</span>
     </div>
   </div>
 </section>
@@ -127,6 +127,72 @@ footer{padding:32px 0; border-top:1px solid var(--line);}
 <section class="corte wrap">
 
   <details class="session-block" open>
+    <summary class="session-summary">
+      <span><b>Sesión</b> — 2026-07-13 09:19</span>
+      <span>3 entradas</span>
+    </summary>
+    <div class="session-body">
+      <div class="log">
+
+        <div class="log-entry">
+          <div class="log-entry-head"><span class="log-num">01</span><h3>Pendientes pasan a ser independientes del tema, con tabla propia</h3></div>
+          <div class="log-block"><span class="log-label">Pregunta</span><p>El usuario aclaró un malentendido de diseño: nunca pidió que el pendiente estuviera atado al tema. Quería una lista libre de pendientes por contacto o por post (1, 2, 14, los que hagan falta), sin relación con los temas ni límite de cantidad.</p></div>
+          <div class="log-block"><span class="log-label">Decisión</span><p>Se crea una tabla <code>pendings</code> propia — texto + fecha opcional + hecho/no-hecho, cada fila vinculada por <code>contact_id</code> o <code>post_id</code> (nunca por tema), cantidad libre. Reemplaza los campos de pendiente que hoy están sueltos en <code>posts</code> y en <code>contact_topics</code>. Todavía sin construir.</p></div>
+          <div class="log-why"><b>Por qué importa:</b> esta era la causa de fondo de casi toda la fricción de la sesión anterior — atar el pendiente al tema hacía que agregar o sacar un tema arriesgara con perder un pendiente sin querer, y limitaba a un pendiente por tema (o uno solo por post) cuando el usuario quería cantidad libre.</div>
+        </div>
+
+        <div class="log-entry">
+          <div class="log-entry-head"><span class="log-num">02</span><h3>Campo "Tema" editable con sincronización completa, sin botón "Editar ficha"</h3></div>
+          <div class="log-block"><span class="log-label">Pregunta</span><p>El pedido original y concreto del usuario, repetido varias veces: que el campo "Tema" de la ficha de creación (texto separado por coma) también aparezca y se pueda editar en el contacto/post ya creado — nada más que eso, sin modal ni ficha completa reabierta.</p></div>
+          <div class="log-block"><span class="log-label">Decisión</span><p>El campo Tema en la ficha ya creada pasa a ser editable con doble-click (mismo patrón que nombre/notas/URL), sincronizando agregar y quitar temas libremente. Recién es seguro hacerlo así una vez separados los pendientes del tema (entrada 01) — antes, sacar un tema del texto podía borrar un pendiente sin avisar.</p></div>
+          <div class="log-why"><b>Por qué importa:</b> resuelve en un solo cambio, chico y seguro, lo que varias rondas de parches al patrón de doble-click no habían logrado — y elimina la necesidad de construir un botón "Editar contacto/post" que reabra la ficha completa, que no era necesario una vez que todos los campos de creación quedan visibles y editables en el lugar.</div>
+        </div>
+
+        <div class="log-entry">
+          <div class="log-entry-head"><span class="log-num">03</span><h3>Memoria del proyecto pasa a un `memory.md` propio, no a la memoria oculta de Claude Code</h3></div>
+          <div class="log-block"><span class="log-label">Pregunta</span><p>El usuario reportó que, al abrir una sesión nueva de Claude Code directo en la carpeta de CRM-Imperial y pedirle que "leyera la memoria", tardaba mucho o no encontraba el contexto. Se investigó y se confirmó: existen dos carpetas de memoria distintas para este proyecto según desde dónde se abre la sesión, y una de las dos estaba vacía.</p></div>
+          <div class="log-block"><span class="log-label">Decisión</span><p>Se creó <code>memory.md</code> directo en la carpeta del proyecto (no en la memoria oculta de <code>.claude/projects/*</code>) — mismo criterio que ya venía funcionando bien con <code>NEXT_STEPS.md</code>. Cualquier sesión nueva abierta ahí puede leerlo directo, sin depender de en qué "cajón" de memoria cayó. Además, se detectó que la memoria global de <code>agency-stack</code> venía mezclando decisiones de ~17 proyectos distintos en un solo índice — separación pendiente para otra sesión, fuera del alcance de CRM Imperial.</p></div>
+          <div class="log-why"><b>Por qué importa:</b> resuelve de raíz el problema de continuidad entre sesiones para este proyecto — un archivo en el repo no depende de la infraestructura de memoria de la herramienta, funciona siempre.</div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="session-block">
+    <summary class="session-summary">
+      <span><b>Sesión</b> — 2026-07-13 00:34</span>
+      <span>3 entradas</span>
+    </summary>
+    <div class="session-body">
+      <div class="log">
+
+        <div class="log-entry">
+          <div class="log-entry-head"><span class="log-num">01</span><h3>Tema visible aunque esté vacío, sin dejar de ser una relación real</h3></div>
+          <div class="log-block"><span class="log-label">Pregunta</span><p>El usuario propuso una salida simple: rellenar el campo Tema con un "." o un espacio al crear el contacto, para que apareciera aunque estuviera vacío — ¿conviene?</p></div>
+          <div class="log-block"><span class="log-label">Decisión</span><p>No — se descartó el placeholder "." porque ensuciaría la lista general de temas y no se puede renombrar en el lugar. En cambio, se mostró un espacio invitando a completarlo ("Sin tema — click para agregar"), con el mismo criterio visual que Notas, pero manteniendo el tema como relación real (tabla <code>topics</code>, filtro, cruce con posts) — no un campo de texto estático.</p></div>
+          <div class="log-why"><b>Por qué importa:</b> confirmar esta distinción antes de construir evitó romper el filtro por tema y la fusión de temas duplicados, que dependen de que todo tema sea una fila real vinculada, no texto suelto.</div>
+        </div>
+
+        <div class="log-entry">
+          <div class="log-entry-head"><span class="log-num">02</span><h3>Webhook editable desde la app, no solo por variable de entorno</h3></div>
+          <div class="log-block"><span class="log-label">Pregunta</span><p>El usuario esperaba un campo dentro de CRM Imperial para pegar la URL del webhook — no encontraba dónde hacerlo, porque solo existía como <code>WEBHOOK_URL</code> en Vercel.</p></div>
+          <div class="log-block"><span class="log-label">Decisión</span><p>Se sumó una tabla <code>settings</code> (key/value) y un campo de texto en <code>/app/exportar</code> para guardar la URL directo desde la app. La env var <code>WEBHOOK_URL</code> queda como fallback si no hay nada guardado en la base.</p></div>
+          <div class="log-why"><b>Por qué importa:</b> evita que el usuario tenga que entrar al dashboard de Vercel para algo que espera configurar desde la propia interfaz — coincide con el espíritu "sin fricción" del proyecto.</div>
+        </div>
+
+        <div class="log-entry">
+          <div class="log-entry-head"><span class="log-num">03</span><h3>Volver a "editar la ficha completa" para tema — era el pedido original, no una alternativa</h3></div>
+          <div class="log-block"><span class="log-label">Pregunta</span><p>Después de varias vueltas intentando arreglar la edición de tema con el patrón de doble-click (mostrarlo vacío, sacar un chip duplicado), el usuario probó en vivo y confirmó que un tema agregado por botón después de creado el contacto seguía sin aparecer bien junto al chip original. Preguntó, no por primera vez, por qué no se podía simplemente reabrir la ficha de creación para editar.</p></div>
+          <div class="log-block"><span class="log-label">Decisión</span><p>Se abandona seguir parchando el mecanismo de doble-click específicamente para tema. Se decidió construir un botón "Editar" en la ficha de contacto y en la de post, que reabra el formulario completo de creación (mismo modal de "+ Contacto"/"+ Post"), pre-cargado con los valores actuales. El doble-click se mantiene para nombre/notas/URL/pendiente, que sí funcionan bien y le gustan al usuario — no se reemplaza, se complementa. Aplica a contacto <b>y</b> post por igual.</p></div>
+          <div class="log-why"><b>Por qué importa:</b> quedó registrado que esta fue la petición original del usuario desde el principio de la sesión (no una alternativa ofrecida por Claude que se aceptó después) — evita seguir iterando sobre un enfoque que ya se descartó una vez. Sin construir todavía; ver <code>NEXT_STEPS.md</code>.</div>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <details class="session-block">
     <summary class="session-summary">
       <span><b>Sesión</b> — 2026-07-12 22:58</span>
       <span>14 entradas</span>
@@ -248,7 +314,7 @@ footer{padding:32px 0; border-top:1px solid var(--line);}
 
 <footer>
   <div class="wrap footer-inner">
-    <div class="footer-note">CRM Imperial · bitácora de decisiones · 2026-07-12</div>
+    <div class="footer-note">CRM Imperial · bitácora de decisiones · 2026-07-13</div>
   </div>
 </footer>
 

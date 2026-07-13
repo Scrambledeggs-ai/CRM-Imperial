@@ -4,8 +4,7 @@ import { PendingTabs } from "./PendingTabs";
 export default async function PendientesPage() {
   const { contacts, posts } = await getPendingItems();
   const pendingCount =
-    contacts.filter((c) => !c.pending_done).length +
-    posts.filter((p) => !p.pending_done).length;
+    contacts.filter((c) => !c.done).length + posts.filter((p) => !p.done).length;
 
   return (
     <div className="flex flex-col gap-8 max-w-3xl">

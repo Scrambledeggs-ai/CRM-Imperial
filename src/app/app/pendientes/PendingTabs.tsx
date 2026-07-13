@@ -1,23 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { toggleContactPendingDone, togglePostPendingDone } from "@/lib/actions";
+import { togglePendingDone } from "@/lib/actions";
 import { PendingListItem } from "./PendingListItem";
 
 type ContactPending = {
+  id: string;
+  text: string;
+  done: boolean;
+  due_date: string | null;
   contact: { id: string; name: string };
-  topic: { id: string; name: string } | null;
-  pending_action: string;
-  pending_done: boolean;
-  pending_date: string | null;
 };
 type PostPending = {
   id: string;
-  title: string;
-  url: string;
-  pending_action: string;
-  pending_done: boolean;
-  pending_date: string | null;
+  text: string;
+  done: boolean;
+  due_date: string | null;
+  post: { id: string; title: string; url: string };
 };
 
 export function PendingTabs({
@@ -59,21 +58,15 @@ export function PendingTabs({
           {contacts.length === 0 && (
             <p className="text-sm text-muted py-4">Nada pendiente por acá.</p>
           )}
-          {contacts.map((item, i) => (
+          {contacts.map((item) => (
             <PendingListItem
-              key={i}
-              label={item.pending_action}
-              done={item.pending_done}
-              date={item.pending_date}
+              key={item.id}
+              label={item.text}
+              done={item.done}
+              date={item.due_date}
               href={`/app/contactos/${item.contact.id}`}
-              meta={`Contacto · ${item.contact.name}${
-                item.topic ? ` · ${item.topic.name}` : ""
-              }`}
-              onToggle={toggleContactPendingDone.bind(
-                null,
-                item.contact.id,
-                item.topic?.id ?? "",
-              )}
+              meta={`Contacto · ${item.contact.name}`}
+              onToggle={togglePendingDone.bind(null, item.id)}
             />
           ))}
         </div>
@@ -84,15 +77,15 @@ export function PendingTabs({
           {posts.length === 0 && (
             <p className="text-sm text-muted py-4">Nada pendiente por acá.</p>
           )}
-          {posts.map((post) => (
+          {posts.map((item) => (
             <PendingListItem
-              key={post.id}
-              label={post.pending_action}
-              done={post.pending_done}
-              date={post.pending_date}
-              href={`/app/posts/${post.id}`}
-              meta={`Post · ${post.title}`}
-              onToggle={togglePostPendingDone.bind(null, post.id)}
+              key={item.id}
+              label={item.text}
+              done={item.done}
+              date={item.due_date}
+              href={`/app/posts/${item.post.id}`}
+              meta={`Post · ${item.post.title}`}
+              onToggle={togglePendingDone.bind(null, item.id)}
             />
           ))}
         </div>

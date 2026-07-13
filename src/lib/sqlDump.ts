@@ -23,6 +23,7 @@ export function buildSqlDump(data: {
   topics: Record<string, unknown>[];
   contact_topics: Record<string, unknown>[];
   post_topics: Record<string, unknown>[];
+  pendings: Record<string, unknown>[];
 }): string {
   const parts = [
     `-- CRM Imperial — export SQL (${new Date().toISOString()})`,
@@ -38,6 +39,8 @@ export function buildSqlDump(data: {
     insertStatements("contact_topics", data.contact_topics),
     "-- post_topics",
     insertStatements("post_topics", data.post_topics),
+    "-- pendings",
+    insertStatements("pendings", data.pendings),
   ];
   return parts.join("\n");
 }

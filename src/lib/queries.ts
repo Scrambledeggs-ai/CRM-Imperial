@@ -1,5 +1,5 @@
 import { getSupabase } from "./supabase";
-import type { ContactWithTopics, PostWithTopics, Topic } from "./types";
+import type { ContactWithTopics, Pending, PostWithTopics, Topic } from "./types";
 
 export async function getTopicsWithCounts() {
   const supabase = getSupabase();
@@ -26,6 +26,14 @@ export async function getTopicsWithCounts() {
     postCount: postCounts.get(topic.id) ?? 0,
   }));
 }
+
+const byDoneThenDate = (a: Pending, b: Pending) => {
+  if (a.done !== b.done) return Number(a.done) - Number(b.done);
+  if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date);
+  if (a.due_date) return -1;
+  if (b.due_date) return 1;
+  return 0;
+};
 
 export async function getContacts(
   topicId?: string,
@@ -74,7 +82,7 @@ export async function getContacts(
   let query = supabase
     .from("contacts")
     .select(
-      "id, name, skool_url, notes, created_at, contact_topics(context, pending_action, topics(id, name))",
+      "id, name, skool_url, notes, created_at, contact_topics(context, topics(id, name)), pendings(id, text, done, due_date)",
     )
     .order("created_at", { ascending: false });
   if (finalIds) query = query.in("id", finalIds);
@@ -88,11 +96,8 @@ export async function getContacts(
     skool_url: string | null;
     notes: string | null;
     created_at: string;
-    contact_topics: {
-      context: string | null;
-      pending_action: string | null;
-      topics: Topic | null;
-    }[];
+    contact_topics: { context: string | null; topics: Topic | null }[];
+    pendings: Pending[];
   };
   const rows = (data ?? []) as unknown as ContactRow[];
 
@@ -104,11 +109,8 @@ export async function getContacts(
     created_at: row.created_at,
     topics: (row.contact_topics ?? [])
       .filter((ct) => ct.topics)
-      .map((ct) => ({
-        topic: ct.topics as Topic,
-        context: ct.context,
-        pending_action: ct.pending_action,
-      })),
+      .map((ct) => ({ topic: ct.topics as Topic, context: ct.context })),
+    pendings: (row.pendings ?? []).slice().sort(byDoneThenDate),
   }));
 }
 
@@ -159,7 +161,7 @@ export async function getPosts(
   let query = supabase
     .from("posts")
     .select(
-      "id, title, url, notes, pending_action, created_at, post_topics(topics(id, name))",
+      "id, title, url, notes, created_at, post_topics(topics(id, name)), pendings(id, text, done, due_date)",
     )
     .order("created_at", { ascending: false });
   if (finalIds) query = query.in("id", finalIds);
@@ -172,9 +174,9 @@ export async function getPosts(
     title: string;
     url: string;
     notes: string | null;
-    pending_action: string | null;
     created_at: string;
     post_topics: { topics: Topic | null }[];
+    pendings: Pending[];
   };
   const rows = (data ?? []) as unknown as PostRow[];
 
@@ -183,11 +185,11 @@ export async function getPosts(
     title: row.title,
     url: row.url,
     notes: row.notes,
-    pending_action: row.pending_action,
     created_at: row.created_at,
     topics: (row.post_topics ?? [])
       .filter((pt) => pt.topics)
       .map((pt) => pt.topics as Topic),
+    pendings: (row.pendings ?? []).slice().sort(byDoneThenDate),
   }));
 }
 
@@ -196,7 +198,7 @@ export async function getContact(id: string) {
   const { data, error } = await supabase
     .from("contacts")
     .select(
-      "id, name, skool_url, notes, created_at, contact_topics(context, pending_action, pending_done, pending_date, topics(id, name))",
+      "id, name, skool_url, notes, created_at, contact_topics(context, topics(id, name)), pendings(id, text, done, due_date)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -209,13 +211,8 @@ export async function getContact(id: string) {
     skool_url: string | null;
     notes: string | null;
     created_at: string;
-    contact_topics: {
-      context: string | null;
-      pending_action: string | null;
-      pending_done: boolean;
-      pending_date: string | null;
-      topics: Topic | null;
-    }[];
+    contact_topics: { context: string | null; topics: Topic | null }[];
+    pendings: Pending[];
   };
   const row = data as unknown as Row;
 
@@ -227,13 +224,8 @@ export async function getContact(id: string) {
     created_at: row.created_at,
     topics: (row.contact_topics ?? [])
       .filter((ct) => ct.topics)
-      .map((ct) => ({
-        topic: ct.topics as Topic,
-        context: ct.context,
-        pending_action: ct.pending_action,
-        pending_done: ct.pending_done,
-        pending_date: ct.pending_date,
-      })),
+      .map((ct) => ({ topic: ct.topics as Topic, context: ct.context })),
+    pendings: (row.pendings ?? []).slice().sort(byDoneThenDate),
   };
 }
 
@@ -242,7 +234,7 @@ export async function getPost(id: string) {
   const { data, error } = await supabase
     .from("posts")
     .select(
-      "id, title, url, notes, pending_action, pending_done, pending_date, created_at, post_topics(topics(id, name))",
+      "id, title, url, notes, created_at, post_topics(topics(id, name)), pendings(id, text, done, due_date)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -254,11 +246,9 @@ export async function getPost(id: string) {
     title: string;
     url: string;
     notes: string | null;
-    pending_action: string | null;
-    pending_done: boolean;
-    pending_date: string | null;
     created_at: string;
     post_topics: { topics: Topic | null }[];
+    pendings: Pending[];
   };
   const row = data as unknown as Row;
 
@@ -267,13 +257,11 @@ export async function getPost(id: string) {
     title: row.title,
     url: row.url,
     notes: row.notes,
-    pending_action: row.pending_action,
-    pending_done: row.pending_done,
-    pending_date: row.pending_date,
     created_at: row.created_at,
     topics: (row.post_topics ?? [])
       .filter((pt) => pt.topics)
       .map((pt) => pt.topics as Topic),
+    pendings: (row.pendings ?? []).slice().sort(byDoneThenDate),
   };
 }
 
@@ -302,14 +290,15 @@ export async function getSetting(key: string): Promise<string | null> {
 
 export async function getAllDataForExport() {
   const supabase = getSupabase();
-  const [contacts, posts, topics, contactTopics, postTopics] = await Promise.all([
+  const [contacts, posts, topics, contactTopics, postTopics, pendings] = await Promise.all([
     supabase.from("contacts").select("*").order("created_at"),
     supabase.from("posts").select("*").order("created_at"),
     supabase.from("topics").select("*").order("name"),
     supabase.from("contact_topics").select("*"),
     supabase.from("post_topics").select("*"),
+    supabase.from("pendings").select("*").order("created_at"),
   ]);
-  for (const r of [contacts, posts, topics, contactTopics, postTopics]) {
+  for (const r of [contacts, posts, topics, contactTopics, postTopics, pendings]) {
     if (r.error) throw new Error(r.error.message);
   }
   return {
@@ -318,64 +307,56 @@ export async function getAllDataForExport() {
     topics: topics.data ?? [],
     contact_topics: contactTopics.data ?? [],
     post_topics: postTopics.data ?? [],
+    pendings: pendings.data ?? [],
   };
 }
 
 export async function getPendingItems() {
   const supabase = getSupabase();
 
-  const [{ data: contactPending, error: e1 }, { data: postPending, error: e2 }] =
-    await Promise.all([
-      supabase
-        .from("contact_topics")
-        .select(
-          "pending_action, pending_done, pending_date, contacts(id, name), topics(id, name)",
-        )
-        .not("pending_action", "is", null),
-      supabase
-        .from("posts")
-        .select("id, title, url, pending_action, pending_done, pending_date")
-        .not("pending_action", "is", null),
-    ]);
-  if (e1) throw new Error(e1.message);
-  if (e2) throw new Error(e2.message);
+  const { data, error } = await supabase
+    .from("pendings")
+    .select("id, text, done, due_date, contacts(id, name), posts(id, title, url)");
+  if (error) throw new Error(error.message);
 
-  type ContactPendingRow = {
-    pending_action: string;
-    pending_done: boolean;
-    pending_date: string | null;
-    contacts: { id: string; name: string } | null;
-    topics: { id: string; name: string } | null;
-  };
-  type PostPendingRow = {
+  type Row = {
     id: string;
-    title: string;
-    url: string;
-    pending_action: string;
-    pending_done: boolean;
-    pending_date: string | null;
+    text: string;
+    done: boolean;
+    due_date: string | null;
+    contacts: { id: string; name: string } | null;
+    posts: { id: string; title: string; url: string } | null;
   };
+  const rows = (data as unknown as Row[]) ?? [];
 
-  const contacts = (contactPending as unknown as ContactPendingRow[] | null ?? [])
+  const contacts = rows
     .filter((row) => row.contacts)
     .map((row) => ({
+      id: row.id,
+      text: row.text,
+      done: row.done,
+      due_date: row.due_date,
       contact: row.contacts as { id: string; name: string },
-      topic: row.topics as { id: string; name: string } | null,
-      pending_action: row.pending_action,
-      pending_done: row.pending_done,
-      pending_date: row.pending_date,
     }));
-  const posts = (postPending as unknown as PostPendingRow[] | null) ?? [];
+  const posts = rows
+    .filter((row) => row.posts)
+    .map((row) => ({
+      id: row.id,
+      text: row.text,
+      done: row.done,
+      due_date: row.due_date,
+      post: row.posts as { id: string; title: string; url: string },
+    }));
 
-  const byDoneThenDate = (a: { pending_done: boolean; pending_date: string | null }, b: typeof a) => {
-    if (a.pending_done !== b.pending_done) return Number(a.pending_done) - Number(b.pending_done);
-    if (a.pending_date && b.pending_date) return a.pending_date.localeCompare(b.pending_date);
-    if (a.pending_date) return -1;
-    if (b.pending_date) return 1;
+  const byDoneThenDueDate = (a: { done: boolean; due_date: string | null }, b: typeof a) => {
+    if (a.done !== b.done) return Number(a.done) - Number(b.done);
+    if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date);
+    if (a.due_date) return -1;
+    if (b.due_date) return 1;
     return 0;
   };
-  contacts.sort(byDoneThenDate);
-  posts.sort(byDoneThenDate);
+  contacts.sort(byDoneThenDueDate);
+  posts.sort(byDoneThenDueDate);
 
   return { contacts, posts };
 }

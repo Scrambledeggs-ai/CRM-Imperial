@@ -37,9 +37,6 @@ export type Database = {
           title: string;
           url: string;
           notes: string | null;
-          pending_action: string | null;
-          pending_done: boolean;
-          pending_date: string | null;
           created_at: string;
         };
         Insert: {
@@ -47,9 +44,6 @@ export type Database = {
           title: string;
           url: string;
           notes?: string | null;
-          pending_action?: string | null;
-          pending_done?: boolean;
-          pending_date?: string | null;
           created_at?: string;
         };
         Update: {
@@ -57,9 +51,6 @@ export type Database = {
           title?: string;
           url?: string;
           notes?: string | null;
-          pending_action?: string | null;
-          pending_done?: boolean;
-          pending_date?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -69,27 +60,48 @@ export type Database = {
           contact_id: string;
           topic_id: string;
           context: string | null;
-          pending_action: string | null;
-          pending_done: boolean;
-          pending_date: string | null;
           created_at: string;
         };
         Insert: {
           contact_id: string;
           topic_id: string;
           context?: string | null;
-          pending_action?: string | null;
-          pending_done?: boolean;
-          pending_date?: string | null;
           created_at?: string;
         };
         Update: {
           contact_id?: string;
           topic_id?: string;
           context?: string | null;
-          pending_action?: string | null;
-          pending_done?: boolean;
-          pending_date?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      pendings: {
+        Row: {
+          id: string;
+          text: string;
+          done: boolean;
+          due_date: string | null;
+          contact_id: string | null;
+          post_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          text: string;
+          done?: boolean;
+          due_date?: string | null;
+          contact_id?: string | null;
+          post_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          text?: string;
+          done?: boolean;
+          due_date?: string | null;
+          contact_id?: string | null;
+          post_id?: string | null;
           created_at?: string;
         };
         Relationships: [];

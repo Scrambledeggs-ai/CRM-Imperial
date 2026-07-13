@@ -16,14 +16,22 @@ export type Post = {
   title: string;
   url: string;
   notes: string | null;
-  pending_action: string | null;
   created_at: string;
 };
 
+export type Pending = {
+  id: string;
+  text: string;
+  done: boolean;
+  due_date: string | null;
+};
+
 export type ContactWithTopics = Contact & {
-  topics: { topic: Topic; context: string | null; pending_action: string | null }[];
+  topics: { topic: Topic; context: string | null }[];
+  pendings: Pending[];
 };
 
 export type PostWithTopics = Post & {
   topics: Topic[];
+  pendings: Pending[];
 };

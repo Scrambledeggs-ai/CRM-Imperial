@@ -1,12 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getPost } from "@/lib/queries";
-import { updatePostField, addPostTopic, deletePost } from "@/lib/actions";
-import { TopicChip } from "../../TopicChip";
+import { updatePostField, updatePostTopics, deletePost } from "@/lib/actions";
 import { EditableField } from "../../EditableField";
-import { AddTopicChip } from "../../AddTopicChip";
+import { TopicsField } from "../../TopicsField";
 import { DeleteButton } from "../../DeleteButton";
-import { PostPendingRow } from "./PostPendingRow";
+import { PendingsPanel } from "../../PendingsPanel";
 
 function domainOf(url: string) {
   try {
@@ -41,15 +40,11 @@ export default async function PostDetailPage({
             onSave={updatePostField.bind(null, post.id, "title")}
           />
         </h1>
-        <div className="flex flex-wrap items-center gap-1.5 mt-2">
-          {post.topics.map((t) => (
-            <TopicChip key={t.id} name={t.name} />
-          ))}
-          {post.topics.length === 0 ? (
-            <AddTopicChip variant="empty" onAdd={addPostTopic.bind(null, post.id)} />
-          ) : (
-            <AddTopicChip onAdd={addPostTopic.bind(null, post.id)} />
-          )}
+        <div className="mt-2">
+          <TopicsField
+            topicNames={post.topics.map((t) => t.name)}
+            onSave={updatePostTopics.bind(null, post.id)}
+          />
         </div>
       </header>
 
@@ -93,14 +88,9 @@ export default async function PostDetailPage({
 
         <div className="rounded-[var(--radius-panel)] border border-panel-border bg-panel p-5">
           <h2 className="font-mono text-[13px] uppercase tracking-wide text-muted mb-3">
-            Pendiente
+            Pendientes
           </h2>
-          <PostPendingRow
-            postId={post.id}
-            pendingAction={post.pending_action}
-            pendingDone={post.pending_done}
-            pendingDate={post.pending_date}
-          />
+          <PendingsPanel target={{ postId: post.id }} pendings={post.pendings} />
         </div>
       </section>
     </div>

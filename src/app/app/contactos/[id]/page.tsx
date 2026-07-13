@@ -1,13 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getContact, getContactMentions } from "@/lib/queries";
-import { updateContactField, addContactTopic, deleteContact } from "@/lib/actions";
+import { updateContactField, updateContactTopics, deleteContact } from "@/lib/actions";
 import { topicColor } from "@/lib/topicColor";
-import { TopicChip } from "../../TopicChip";
 import { EditableField } from "../../EditableField";
-import { AddTopicChip } from "../../AddTopicChip";
+import { TopicsField } from "../../TopicsField";
 import { DeleteButton } from "../../DeleteButton";
-import { PendingRow } from "./PendingRow";
+import { PendingsPanel } from "../../PendingsPanel";
 
 export default async function ContactDetailPage({
   params,
@@ -51,18 +50,11 @@ export default async function ContactDetailPage({
                 onSave={updateContactField.bind(null, contact.id, "name")}
               />
             </h1>
-            <div className="flex flex-wrap items-center gap-1.5 mt-2">
-              {contact.topics.map((t) => (
-                <TopicChip key={t.topic.id} name={t.topic.name} />
-              ))}
-              {contact.topics.length === 0 ? (
-                <AddTopicChip
-                  variant="empty"
-                  onAdd={addContactTopic.bind(null, contact.id)}
-                />
-              ) : (
-                <AddTopicChip onAdd={addContactTopic.bind(null, contact.id)} />
-              )}
+            <div className="mt-2">
+              <TopicsField
+                topicNames={contact.topics.map((t) => t.topic.name)}
+                onSave={updateContactTopics.bind(null, contact.id)}
+              />
             </div>
             <div className="mt-2 text-sm text-muted">
               <EditableField
@@ -104,22 +96,7 @@ export default async function ContactDetailPage({
           <h2 className="font-mono text-[13px] uppercase tracking-wide text-muted mb-3">
             Pendientes
           </h2>
-          {contact.topics.length === 0 && (
-            <p className="text-sm text-muted">
-              Agregale un tema a este contacto para poder sumar pendientes.
-            </p>
-          )}
-          {contact.topics.map((t) => (
-            <PendingRow
-              key={t.topic.id}
-              contactId={contact.id}
-              topicId={t.topic.id}
-              topicName={t.topic.name}
-              pendingAction={t.pending_action}
-              pendingDone={t.pending_done}
-              pendingDate={t.pending_date}
-            />
-          ))}
+          <PendingsPanel target={{ contactId: contact.id }} pendings={contact.pendings} />
         </div>
       </section>
 
