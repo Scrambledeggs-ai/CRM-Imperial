@@ -7,7 +7,6 @@ import {
 } from "@/lib/actions";
 import { EditableField } from "../../EditableField";
 import { DateField } from "../../DateField";
-import { TopicChip } from "../../TopicChip";
 import { useTransition } from "react";
 
 export function PendingRow({
@@ -48,7 +47,7 @@ export function PendingRow({
           onSave={(next) => updateContactTopicPending(contactId, topicId, next)}
         />
         <div className="mt-1 flex items-center gap-2">
-          <TopicChip name={topicName} />
+          <span className="text-xs text-muted">{topicName}</span>
           <DateField
             value={pendingDate}
             onSave={(iso) => updateContactTopicPendingDate(contactId, topicId, iso)}
