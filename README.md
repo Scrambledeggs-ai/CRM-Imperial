@@ -27,7 +27,7 @@ Cada persona que use esto corre su propia instancia, con su propio Supabase — 
 1. Andá a [supabase.com/dashboard](https://supabase.com/dashboard) → **New Project**.
 2. Elegí nombre, región y una contraseña de base de datos (guardala, no hace falta para esta app, pero por las dudas).
 3. Cuando el proyecto esté listo, andá a **SQL Editor** → **New query**.
-4. Pegá y ejecutá, en orden, cada archivo de [`supabase/migrations/`](supabase/migrations/) (`0001_init.sql` a `0005_settings.sql`).
+4. Pegá y ejecutá, en orden, cada archivo de [`supabase/migrations/`](supabase/migrations/) (`0001_init.sql` a `0006_pendings.sql`).
 5. Andá a **Settings → API** y copiá dos valores: **Project URL** y la **service_role key** (no la `anon`/`public`).
 
 ### 2. Deployar en Vercel
