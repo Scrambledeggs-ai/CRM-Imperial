@@ -12,7 +12,7 @@ El plan que estaba pendiente (ver historial en `memory.md`) se construyó comple
 - Dashboard, `/app/pendientes`, webhook y exportadores (JSON/SQL) actualizados al nuevo modelo.
 - Verificado: `npm run build` limpio, test insert→verificar→limpiar contra la base real, y chequeo del HTML renderizado en `/app`, `/app/pendientes`, ficha de contacto y de post con datos reales de producción.
 
-**No hay tareas pendientes conocidas en este momento.** Falta únicamente el `git push` — el usuario lo hace con su propio token (Claude solo commitea local).
+**No hay tareas pendientes conocidas en este momento.** Pusheado a GitHub (`main` en `151373b`) y deployado a producción (`https://crm-imperial.vercel.app`, confirmado con 200 en `/app/pendientes` post-deploy). Todo — DB, código y producción — en el mismo estado.
 
 ## Si se retoma sin memoria de sesión
 
