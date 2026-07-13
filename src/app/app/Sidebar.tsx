@@ -43,6 +43,15 @@ export function Sidebar() {
           >
             Pendientes
           </Link>
+          <Link
+            href="/app/exportar"
+            className={navItemClass(pathname === "/app/exportar")}
+          >
+            Exportar
+          </Link>
+          <Link href="/app/temas" className={navItemClass(pathname === "/app/temas")}>
+            Temas
+          </Link>
         </nav>
 
         <div className="mt-auto flex flex-col gap-2">
@@ -62,6 +71,18 @@ export function Sidebar() {
           </button>
 
           <FeedbackCta />
+
+          <p className="text-center text-[11px] text-muted mt-2">
+            Desarrollado por{" "}
+            <a
+              href="https://zenau.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-accent underline"
+            >
+              zenau.ai
+            </a>
+          </p>
         </div>
       </aside>
 

@@ -1,17 +1,24 @@
 "use client";
 
 import { useTransition } from "react";
-import { togglePostPendingDone, updatePostPending } from "@/lib/actions";
+import {
+  togglePostPendingDone,
+  updatePostPending,
+  updatePostPendingDate,
+} from "@/lib/actions";
 import { EditableField } from "../../EditableField";
+import { DateField } from "../../DateField";
 
 export function PostPendingRow({
   postId,
   pendingAction,
   pendingDone,
+  pendingDate,
 }: {
   postId: string;
   pendingAction: string | null;
   pendingDone: boolean;
+  pendingDate: string | null;
 }) {
   const [isPending, startTransition] = useTransition();
 
@@ -26,12 +33,17 @@ export function PostPendingRow({
         }
         className="mt-1"
       />
-      <EditableField
-        value={pendingAction ?? ""}
-        placeholder="Sin pendientes en este post. Doble click para agregar."
-        className={pendingDone ? "line-through opacity-50 text-sm" : "text-sm"}
-        onSave={updatePostPending.bind(null, postId)}
-      />
+      <div className="flex-1">
+        <EditableField
+          value={pendingAction ?? ""}
+          placeholder="Sin pendientes en este post. Doble click para agregar."
+          className={pendingDone ? "line-through opacity-50 text-sm" : "text-sm"}
+          onSave={updatePostPending.bind(null, postId)}
+        />
+        <div className="mt-1">
+          <DateField value={pendingDate} onSave={updatePostPendingDate.bind(null, postId)} />
+        </div>
+      </div>
     </div>
   );
 }

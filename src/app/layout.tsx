@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
+import { ServiceWorkerRegister } from "./ServiceWorkerRegister";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -17,6 +18,15 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "CRM Imperial",
   description: "Contactos y posts de comunidad, cruzados por tema.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "CRM Imperial",
+  },
+};
+
+export const viewport = {
+  themeColor: "#0a0e18",
 };
 
 // Sin preferencia guardada, arranca en oscuro (es el look pensado para la app).
@@ -41,7 +51,10 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <ServiceWorkerRegister />
+      </body>
     </html>
   );
 }

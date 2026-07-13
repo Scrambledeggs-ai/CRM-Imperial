@@ -9,6 +9,7 @@ type ContactPending = {
   topic: { id: string; name: string } | null;
   pending_action: string;
   pending_done: boolean;
+  pending_date: string | null;
 };
 type PostPending = {
   id: string;
@@ -16,6 +17,7 @@ type PostPending = {
   url: string;
   pending_action: string;
   pending_done: boolean;
+  pending_date: string | null;
 };
 
 export function PendingTabs({
@@ -62,6 +64,7 @@ export function PendingTabs({
               key={i}
               label={item.pending_action}
               done={item.pending_done}
+              date={item.pending_date}
               href={`/app/contactos/${item.contact.id}`}
               meta={`Contacto · ${item.contact.name}${
                 item.topic ? ` · ${item.topic.name}` : ""
@@ -86,6 +89,7 @@ export function PendingTabs({
               key={post.id}
               label={post.pending_action}
               done={post.pending_done}
+              date={post.pending_date}
               href={`/app/posts/${post.id}`}
               meta={`Post · ${post.title}`}
               onToggle={togglePostPendingDone.bind(null, post.id)}

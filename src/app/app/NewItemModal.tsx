@@ -17,6 +17,10 @@ export function NewItemModal({
 
   function handleSubmit(action: (formData: FormData) => Promise<void>) {
     return (formData: FormData) => {
+      const rawDate = formData.get("pending_date");
+      if (rawDate && typeof rawDate === "string") {
+        formData.set("pending_date", new Date(rawDate).toISOString());
+      }
       startTransition(async () => {
         await action(formData);
         onClose();
@@ -161,10 +165,16 @@ function PendingToggle({
         Añadir un pendiente
       </label>
       {wantsPending && (
-        <label className="flex flex-col gap-1">
-          <span className={labelClass}>Pendiente</span>
-          <input name="pending_action" className={inputClass} />
-        </label>
+        <>
+          <label className="flex flex-col gap-1">
+            <span className={labelClass}>Pendiente</span>
+            <input name="pending_action" className={inputClass} />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className={labelClass}>Fecha (opcional)</span>
+            <input type="datetime-local" name="pending_date" className={inputClass} />
+          </label>
+        </>
       )}
     </div>
   );

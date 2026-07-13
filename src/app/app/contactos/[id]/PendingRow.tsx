@@ -1,7 +1,12 @@
 "use client";
 
-import { updateContactTopicPending, toggleContactPendingDone } from "@/lib/actions";
+import {
+  updateContactTopicPending,
+  updateContactTopicPendingDate,
+  toggleContactPendingDone,
+} from "@/lib/actions";
 import { EditableField } from "../../EditableField";
+import { DateField } from "../../DateField";
 import { TopicChip } from "../../TopicChip";
 import { useTransition } from "react";
 
@@ -11,12 +16,14 @@ export function PendingRow({
   topicName,
   pendingAction,
   pendingDone,
+  pendingDate,
 }: {
   contactId: string;
   topicId: string;
   topicName: string;
   pendingAction: string | null;
   pendingDone: boolean;
+  pendingDate: string | null;
 }) {
   const [isPending, startTransition] = useTransition();
 
@@ -40,8 +47,12 @@ export function PendingRow({
           className={pendingDone ? "line-through opacity-50 text-sm" : "text-sm"}
           onSave={(next) => updateContactTopicPending(contactId, topicId, next)}
         />
-        <div className="mt-1">
+        <div className="mt-1 flex items-center gap-2">
           <TopicChip name={topicName} />
+          <DateField
+            value={pendingDate}
+            onSave={(iso) => updateContactTopicPendingDate(contactId, topicId, iso)}
+          />
         </div>
       </div>
     </div>

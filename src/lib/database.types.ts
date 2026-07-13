@@ -39,6 +39,7 @@ export type Database = {
           notes: string | null;
           pending_action: string | null;
           pending_done: boolean;
+          pending_date: string | null;
           created_at: string;
         };
         Insert: {
@@ -48,6 +49,7 @@ export type Database = {
           notes?: string | null;
           pending_action?: string | null;
           pending_done?: boolean;
+          pending_date?: string | null;
           created_at?: string;
         };
         Update: {
@@ -57,6 +59,7 @@ export type Database = {
           notes?: string | null;
           pending_action?: string | null;
           pending_done?: boolean;
+          pending_date?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -68,6 +71,7 @@ export type Database = {
           context: string | null;
           pending_action: string | null;
           pending_done: boolean;
+          pending_date: string | null;
           created_at: string;
         };
         Insert: {
@@ -76,6 +80,7 @@ export type Database = {
           context?: string | null;
           pending_action?: string | null;
           pending_done?: boolean;
+          pending_date?: string | null;
           created_at?: string;
         };
         Update: {
@@ -84,6 +89,7 @@ export type Database = {
           context?: string | null;
           pending_action?: string | null;
           pending_done?: boolean;
+          pending_date?: string | null;
           created_at?: string;
         };
         Relationships: [];

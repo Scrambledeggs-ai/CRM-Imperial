@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getPost } from "@/lib/queries";
-import { updatePostField } from "@/lib/actions";
+import { updatePostField, addPostTopic, deletePost } from "@/lib/actions";
 import { TopicChip } from "../../TopicChip";
 import { EditableField } from "../../EditableField";
+import { AddTopicChip } from "../../AddTopicChip";
+import { DeleteButton } from "../../DeleteButton";
 import { PostPendingRow } from "./PostPendingRow";
 
 function domainOf(url: string) {
@@ -25,9 +27,12 @@ export default async function PostDetailPage({
 
   return (
     <div className="flex flex-col gap-8 max-w-4xl">
-      <Link href="/app" className="text-sm text-muted hover:text-accent w-fit">
-        ← Volver
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link href="/app" className="text-sm text-muted hover:text-accent w-fit">
+          ← Volver
+        </Link>
+        <DeleteButton label="Borrar post" onDelete={deletePost.bind(null, post.id)} />
+      </div>
 
       <header>
         <h1 className="text-[30px] font-bold leading-tight">
@@ -36,10 +41,11 @@ export default async function PostDetailPage({
             onSave={updatePostField.bind(null, post.id, "title")}
           />
         </h1>
-        <div className="flex flex-wrap gap-1.5 mt-2">
+        <div className="flex flex-wrap items-center gap-1.5 mt-2">
           {post.topics.map((t) => (
             <TopicChip key={t.id} name={t.name} />
           ))}
+          <AddTopicChip onAdd={addPostTopic.bind(null, post.id)} />
         </div>
       </header>
 
@@ -73,8 +79,9 @@ export default async function PostDetailPage({
           </h2>
           <EditableField
             as="textarea"
+            enableMentions
             value={post.notes ?? ""}
-            placeholder="Doble click para agregar notas"
+            placeholder="Doble click para agregar notas. Escribí @ para mencionar a un contacto."
             onSave={updatePostField.bind(null, post.id, "notes")}
             className="text-sm leading-relaxed block"
           />
@@ -88,6 +95,7 @@ export default async function PostDetailPage({
             postId={post.id}
             pendingAction={post.pending_action}
             pendingDone={post.pending_done}
+            pendingDate={post.pending_date}
           />
         </div>
       </section>
