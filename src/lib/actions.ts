@@ -5,6 +5,15 @@ import { redirect } from "next/navigation";
 import { getSupabase } from "./supabase";
 import { fireWebhook } from "./webhook";
 
+export async function setSetting(key: string, value: string) {
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from("settings")
+    .upsert({ key, value: value.trim() || null, updated_at: new Date().toISOString() });
+  if (error) throw new Error(error.message);
+  revalidatePath("/app/exportar");
+}
+
 function parseTopicNames(raw: string): string[] {
   const seen = new Set<string>();
   for (const part of raw.split(",")) {

@@ -1,6 +1,21 @@
+import { getSupabase } from "./supabase";
+
 export async function fireWebhook(event: string, payload: Record<string, unknown>) {
-  const url = process.env.WEBHOOK_URL;
+  let url: string | null = null;
+  try {
+    const supabase = getSupabase();
+    const { data } = await supabase
+      .from("settings")
+      .select("value")
+      .eq("key", "webhook_url")
+      .maybeSingle();
+    url = data?.value ?? null;
+  } catch {
+    // si falla la lectura del setting, seguimos al fallback de la env var
+  }
+  url ||= process.env.WEBHOOK_URL ?? null;
   if (!url) return;
+
   try {
     await fetch(url, {
       method: "POST",

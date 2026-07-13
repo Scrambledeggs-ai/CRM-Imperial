@@ -100,6 +100,12 @@ export type Database = {
         Update: { post_id?: string; topic_id?: string; created_at?: string };
         Relationships: [];
       };
+      settings: {
+        Row: { key: string; value: string | null; updated_at: string };
+        Insert: { key: string; value?: string | null; updated_at?: string };
+        Update: { key?: string; value?: string | null; updated_at?: string };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

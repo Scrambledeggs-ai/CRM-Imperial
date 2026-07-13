@@ -55,7 +55,14 @@ export default async function ContactDetailPage({
               {contact.topics.map((t) => (
                 <TopicChip key={t.topic.id} name={t.topic.name} />
               ))}
-              <AddTopicChip onAdd={addContactTopic.bind(null, contact.id)} />
+              {contact.topics.length === 0 ? (
+                <AddTopicChip
+                  variant="empty"
+                  onAdd={addContactTopic.bind(null, contact.id)}
+                />
+              ) : (
+                <AddTopicChip onAdd={addContactTopic.bind(null, contact.id)} />
+              )}
             </div>
             <div className="mt-2 text-sm text-muted">
               <EditableField

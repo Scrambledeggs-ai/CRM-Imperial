@@ -45,7 +45,11 @@ export default async function PostDetailPage({
           {post.topics.map((t) => (
             <TopicChip key={t.id} name={t.name} />
           ))}
-          <AddTopicChip onAdd={addPostTopic.bind(null, post.id)} />
+          {post.topics.length === 0 ? (
+            <AddTopicChip variant="empty" onAdd={addPostTopic.bind(null, post.id)} />
+          ) : (
+            <AddTopicChip onAdd={addPostTopic.bind(null, post.id)} />
+          )}
         </div>
       </header>
 

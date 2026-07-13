@@ -289,6 +289,17 @@ export async function getContactMentions(contactId: string) {
   return { contacts: contacts ?? [], posts: posts ?? [] };
 }
 
+export async function getSetting(key: string): Promise<string | null> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("settings")
+    .select("value")
+    .eq("key", key)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data?.value ?? null;
+}
+
 export async function getAllDataForExport() {
   const supabase = getSupabase();
   const [contacts, posts, topics, contactTopics, postTopics] = await Promise.all([

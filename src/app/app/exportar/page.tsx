@@ -1,3 +1,6 @@
+import { getSetting } from "@/lib/queries";
+import { WebhookSettings } from "./WebhookSettings";
+
 const EXPORTS = [
   {
     href: "/api/export/json",
@@ -21,7 +24,9 @@ const EXPORTS = [
   },
 ];
 
-export default function ExportarPage() {
+export default async function ExportarPage() {
+  const webhookUrl = await getSetting("webhook_url");
+
   return (
     <div className="flex flex-col gap-8 max-w-2xl">
       <header>
@@ -44,6 +49,8 @@ export default function ExportarPage() {
           </a>
         ))}
       </div>
+
+      <WebhookSettings initialValue={webhookUrl ?? ""} />
     </div>
   );
 }
