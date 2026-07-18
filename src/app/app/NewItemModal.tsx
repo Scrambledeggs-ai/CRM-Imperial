@@ -97,7 +97,7 @@ export function NewItemModal({
                 name="notes"
                 rows={3}
                 className={inputClass}
-                placeholder="Escribí @ para mencionar a un contacto"
+                placeholder="También puedes @mencionar contactos"
               />
             </label>
             <PendingToggle
@@ -137,7 +137,7 @@ export function NewItemModal({
                 name="notes"
                 rows={3}
                 className={inputClass}
-                placeholder="Escribí @ para mencionar a un contacto"
+                placeholder="También puedes @mencionar contactos"
               />
             </label>
             <PendingToggle

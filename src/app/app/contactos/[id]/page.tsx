@@ -86,7 +86,7 @@ export default async function ContactDetailPage({
             as="textarea"
             enableMentions
             value={contact.notes ?? ""}
-            placeholder="Doble click para agregar notas — qué sabe, a qué se dedica. Escribí @ para mencionar a otro contacto."
+            placeholder="Doble click para agregar notas — qué sabe, a qué se dedica. En tus notas también puedes @mencionar a otros contactos."
             onSave={updateContactField.bind(null, contact.id, "notes")}
             className="text-sm leading-relaxed block"
           />

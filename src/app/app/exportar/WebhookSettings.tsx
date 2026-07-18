@@ -20,7 +20,7 @@ export function WebhookSettings({ initialValue }: { initialValue: string }) {
     <div className="rounded-[var(--radius-panel)] border border-panel-border bg-panel p-5 flex flex-col gap-2">
       <h2 className="font-mono text-[13px] uppercase tracking-wide text-muted">Webhook</h2>
       <p className="text-sm text-muted">
-        Si lo completás, cada vez que se crea, edita o borra un contacto o post se
+        Si lo completas, cada vez que se crea, edita o borra un contacto o post se
         manda un POST con un JSON a esta URL (útil para Airtable, n8n, etc.).
       </p>
       <div className="flex gap-2 mt-2">

@@ -311,7 +311,7 @@ export async function deletePost(postId: string) {
 }
 
 export async function mergeTopics(sourceId: string, targetId: string) {
-  if (sourceId === targetId) throw new Error("Elegí dos temas distintos.");
+  if (sourceId === targetId) throw new Error("Elige dos temas distintos.");
   const supabase = getSupabase();
 
   const [{ data: sourceContacts }, { data: targetContacts }] = await Promise.all([

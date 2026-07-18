@@ -19,7 +19,7 @@ export default async function CompartirPage({
       <header>
         <h1 className="text-2xl font-semibold">Guardar post compartido</h1>
         <p className="text-sm text-muted mt-1">
-          Revisá los datos y guardalo — llegó desde el botón "Compartir".
+          Revisa los datos y guárdalo — llegó desde el botón &quot;Compartir&quot;.
         </p>
       </header>
       <ShareCaptureForm defaultUrl={extractedUrl} defaultTitle={defaultTitle} />

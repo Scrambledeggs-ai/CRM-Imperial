@@ -21,9 +21,9 @@ export function FeedbackCta() {
         onClick={() => setOpen(true)}
         className="mt-4 text-center px-3 py-2 rounded-[var(--radius-control)] text-xs font-mono border border-dashed border-panel-border text-muted hover:text-accent hover:border-accent"
       >
-        ¿Querés v2.0?
+        ¿Quieres v2.0?
         <br />
-        Pedí tu función →
+        Pide tu función →
       </button>
     );
   }
@@ -38,7 +38,7 @@ export function FeedbackCta() {
         rows={3}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Contanos qué función te gustaría..."
+        placeholder="Cuéntanos qué función te gustaría..."
         className="bg-content border border-panel-border rounded-[var(--radius-control)] px-2 py-1.5 text-sm outline-none focus:border-accent resize-none"
       />
       <div className="flex gap-2">

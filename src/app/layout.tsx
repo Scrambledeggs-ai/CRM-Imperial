@@ -47,6 +47,7 @@ export default function RootLayout({
     <html
       lang="es"
       className={`${spaceGrotesk.variable} ${plexMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />

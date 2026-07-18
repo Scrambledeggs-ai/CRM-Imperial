@@ -5,15 +5,15 @@ import { ThemeToggle } from "./ThemeToggle";
 const FEATURES = [
   {
     title: "Captura rápida",
-    body: "Guardá un post o un contacto en segundos, desde el celular o la compu, sin copiar links a mano en un doc aparte.",
+    body: "Guarda un post o un contacto en segundos, desde el celular o la computadora, sin copiar links a mano en un doc aparte.",
   },
   {
     title: "Cruce por tema",
-    body: "Contactos y posts se conectan por tema de interés. Filtrás por tema y ves quién habló de qué, y qué posts hay sobre eso.",
+    body: "Contactos y posts se conectan por tema de interés. Filtras por tema y ves quién habló de qué, y qué posts hay sobre eso.",
   },
   {
     title: "Pendientes tachables",
-    body: "Lo que quedó por hacer con cada contacto o post, en un solo checklist. Tildás y queda tachado, sin perderlo de vista.",
+    body: "Lo que quedó por hacer con cada contacto o post, en un solo checklist. Tildas y queda tachado, sin perderlo de vista.",
   },
 ];
 
@@ -50,7 +50,7 @@ export default function LandingPage() {
             El CRM que Skool no tiene
           </h1>
           <p className="text-[19px] text-[#c3cad8] leading-relaxed">
-            Guardá los posts que te interesan y llevá un CRM de tu comunidad,
+            Guarda los posts que te interesan y lleva un CRM de tu comunidad,
             cruzados por tema. Sin copiar links a mano en un doc aparte.
           </p>
           <div className="flex flex-wrap gap-3">

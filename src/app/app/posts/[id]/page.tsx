@@ -80,7 +80,7 @@ export default async function PostDetailPage({
             as="textarea"
             enableMentions
             value={post.notes ?? ""}
-            placeholder="Doble click para agregar notas. Escribí @ para mencionar a un contacto."
+            placeholder="Doble click para agregar notas. En tus notas también puedes @mencionar contactos."
             onSave={updatePostField.bind(null, post.id, "notes")}
             className="text-sm leading-relaxed block"
           />

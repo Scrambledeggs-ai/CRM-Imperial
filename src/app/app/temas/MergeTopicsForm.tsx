@@ -27,7 +27,7 @@ export function MergeTopicsForm({ topics }: { topics: Topic[] }) {
   return (
     <div className="rounded-[var(--radius-panel)] border border-panel-border bg-panel p-5 flex flex-col gap-3">
       <p className="text-sm text-muted">
-        Fusioná temas duplicados (ej: "ia" + "inteligencia artificial") — el tema de
+        Fusioná temas duplicados (ej: &quot;ia&quot; + &quot;inteligencia artificial&quot;) — el tema de
         origen desaparece, todo lo que tenía queda vinculado al de destino.
       </p>
       <div className="flex flex-wrap items-center gap-2">
@@ -49,7 +49,7 @@ export function MergeTopicsForm({ topics }: { topics: Topic[] }) {
           onChange={(e) => setTarget(e.target.value)}
           className={selectClass}
         >
-          <option value="">elegí destino…</option>
+          <option value="">elige destino…</option>
           {topics
             .filter((t) => t.id !== source)
             .map((t) => (

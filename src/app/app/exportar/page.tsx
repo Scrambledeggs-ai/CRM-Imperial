@@ -32,7 +32,7 @@ export default async function ExportarPage() {
       <header>
         <h1 className="text-2xl font-semibold">Exportar</h1>
         <p className="text-sm text-muted mt-1">
-          Descargá tus datos en el formato que necesites. Nada de esto queda
+          Descarga tus datos en el formato que necesites. Nada de esto queda
           guardado en ningún lado más que en tu descarga.
         </p>
       </header>
