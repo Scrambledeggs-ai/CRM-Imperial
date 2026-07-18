@@ -85,6 +85,7 @@ export type Database = {
           contact_id: string | null;
           post_id: string | null;
           created_at: string;
+          overdue_notified: boolean;
         };
         Insert: {
           id?: string;
@@ -94,6 +95,7 @@ export type Database = {
           contact_id?: string | null;
           post_id?: string | null;
           created_at?: string;
+          overdue_notified?: boolean;
         };
         Update: {
           id?: string;
@@ -103,6 +105,7 @@ export type Database = {
           contact_id?: string | null;
           post_id?: string | null;
           created_at?: string;
+          overdue_notified?: boolean;
         };
         Relationships: [];
       };

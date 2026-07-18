@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import {
   addPending,
   deletePending,
@@ -10,6 +10,8 @@ import {
 } from "@/lib/actions";
 import { EditableField } from "./EditableField";
 import { DateField } from "./DateField";
+import { MentionDropdown } from "./MentionDropdown";
+import { findActiveMention } from "@/lib/mentions";
 import type { Pending } from "@/lib/types";
 
 type Target = { contactId: string } | { postId: string };
@@ -18,8 +20,27 @@ export function PendingsPanel({ target, pendings }: { target: Target; pendings: 
   const [isPending, startTransition] = useTransition();
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
+  const [mention, setMention] = useState<{ start: number; query: string } | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function handleDraftChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setDraft(e.target.value);
+    const cursor = e.target.selectionStart ?? e.target.value.length;
+    setMention(findActiveMention(e.target.value, cursor));
+  }
+
+  function pickMention(contact: { id: string; name: string }) {
+    if (!mention) return;
+    const cursor = inputRef.current?.selectionStart ?? draft.length;
+    const token = `@[${contact.name}](${contact.id}) `;
+    const next = draft.slice(0, mention.start) + token + draft.slice(cursor);
+    setDraft(next);
+    setMention(null);
+    inputRef.current?.focus();
+  }
 
   function submitNew() {
+    if (mention) return;
     const text = draft.trim();
     if (!text) {
       setAdding(false);
@@ -52,6 +73,7 @@ export function PendingsPanel({ target, pendings }: { target: Target; pendings: 
           <div className="flex-1">
             <EditableField
               value={p.text}
+              enableMentions
               className={p.done ? "line-through opacity-50 text-sm" : "text-sm"}
               onSave={(next) => updatePendingText(p.id, next)}
             />
@@ -71,25 +93,33 @@ export function PendingsPanel({ target, pendings }: { target: Target; pendings: 
       ))}
 
       {adding ? (
-        <input
-          autoFocus
-          value={draft}
-          disabled={isPending}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={submitNew}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              submitNew();
-            }
-            if (e.key === "Escape") {
-              setDraft("");
-              setAdding(false);
-            }
-          }}
-          placeholder="nuevo pendiente"
-          className="text-sm bg-content border border-panel-border rounded-[var(--radius-control)] px-2 py-1.5 mt-2 outline-none focus:border-accent"
-        />
+        <div className="relative">
+          <input
+            ref={inputRef}
+            autoFocus
+            value={draft}
+            disabled={isPending}
+            onChange={handleDraftChange}
+            onBlur={submitNew}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !mention) {
+                e.preventDefault();
+                submitNew();
+              }
+              if (e.key === "Escape") {
+                if (mention) {
+                  setMention(null);
+                } else {
+                  setDraft("");
+                  setAdding(false);
+                }
+              }
+            }}
+            placeholder="nuevo pendiente — @ para mencionar"
+            className="text-sm bg-content border border-panel-border rounded-[var(--radius-control)] px-2 py-1.5 mt-2 outline-none focus:border-accent w-full"
+          />
+          {mention && <MentionDropdown query={mention.query} onPick={pickMention} />}
+        </div>
       ) : (
         <button
           type="button"

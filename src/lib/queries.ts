@@ -1,4 +1,5 @@
 import { getSupabase } from "./supabase";
+import { extractMentionedIds } from "./mentions";
 import type { ContactWithTopics, Pending, PostWithTopics, Topic } from "./types";
 
 export async function getTopicsWithCounts() {
@@ -25,6 +26,34 @@ export async function getTopicsWithCounts() {
     contactCount: contactCounts.get(topic.id) ?? 0,
     postCount: postCounts.get(topic.id) ?? 0,
   }));
+}
+
+async function findContactsByName(
+  supabase: ReturnType<typeof getSupabase>,
+  namePart: string,
+): Promise<{ id: string; name: string }[]> {
+  const { data, error } = await supabase
+    .from("contacts")
+    .select("id, name")
+    .ilike("name", `%${namePart}%`);
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+async function findMentionMatches(
+  supabase: ReturnType<typeof getSupabase>,
+  table: "contacts" | "posts",
+  contactIds: string[],
+): Promise<Set<string>> {
+  const results = await Promise.all(
+    contactIds.map((id) => supabase.from(table).select("id").ilike("notes", `%](${id})%`)),
+  );
+  const ids = new Set<string>();
+  for (const r of results) {
+    if (r.error) throw new Error(r.error.message);
+    for (const row of r.data ?? []) ids.add(row.id);
+  }
+  return ids;
 }
 
 const byDoneThenDate = (a: Pending, b: Pending) => {
@@ -54,22 +83,32 @@ export async function getContacts(
 
   let searchIds: Set<string> | null = null;
   if (search?.trim()) {
-    const term = `%${search.trim()}%`;
-    const [{ data: byField, error: e1 }, { data: byTopic, error: e2 }] =
-      await Promise.all([
-        supabase.from("contacts").select("id").or(`name.ilike.${term},notes.ilike.${term}`),
-        supabase
-          .from("contact_topics")
-          .select("contact_id, topics!inner(name)")
-          .ilike("topics.name", term),
+    const trimmed = search.trim();
+    if (trimmed.startsWith("@") && trimmed.length > 1) {
+      const namePart = trimmed.slice(1).trim();
+      const matches = namePart ? await findContactsByName(supabase, namePart) : [];
+      if (matches.length === 0) return [];
+      const matchedIds = matches.map((m) => m.id);
+      const mentioned = await findMentionMatches(supabase, "contacts", matchedIds);
+      searchIds = new Set([...matchedIds, ...mentioned]);
+    } else {
+      const term = `%${trimmed}%`;
+      const [{ data: byField, error: e1 }, { data: byTopic, error: e2 }] =
+        await Promise.all([
+          supabase.from("contacts").select("id").or(`name.ilike.${term},notes.ilike.${term}`),
+          supabase
+            .from("contact_topics")
+            .select("contact_id, topics!inner(name)")
+            .ilike("topics.name", term),
+        ]);
+      if (e1) throw new Error(e1.message);
+      if (e2) throw new Error(e2.message);
+      const topicRows = (byTopic ?? []) as unknown as { contact_id: string }[];
+      searchIds = new Set([
+        ...(byField ?? []).map((r) => r.id),
+        ...topicRows.map((r) => r.contact_id),
       ]);
-    if (e1) throw new Error(e1.message);
-    if (e2) throw new Error(e2.message);
-    const topicRows = (byTopic ?? []) as unknown as { contact_id: string }[];
-    searchIds = new Set([
-      ...(byField ?? []).map((r) => r.id),
-      ...topicRows.map((r) => r.contact_id),
-    ]);
+    }
     if (searchIds.size === 0) return [];
   }
 
@@ -133,22 +172,34 @@ export async function getPosts(
 
   let searchIds: Set<string> | null = null;
   if (search?.trim()) {
-    const term = `%${search.trim()}%`;
-    const [{ data: byField, error: e1 }, { data: byTopic, error: e2 }] =
-      await Promise.all([
-        supabase.from("posts").select("id").or(`title.ilike.${term},notes.ilike.${term}`),
-        supabase
-          .from("post_topics")
-          .select("post_id, topics!inner(name)")
-          .ilike("topics.name", term),
+    const trimmed = search.trim();
+    if (trimmed.startsWith("@") && trimmed.length > 1) {
+      const namePart = trimmed.slice(1).trim();
+      const matches = namePart ? await findContactsByName(supabase, namePart) : [];
+      if (matches.length === 0) return [];
+      searchIds = await findMentionMatches(
+        supabase,
+        "posts",
+        matches.map((m) => m.id),
+      );
+    } else {
+      const term = `%${trimmed}%`;
+      const [{ data: byField, error: e1 }, { data: byTopic, error: e2 }] =
+        await Promise.all([
+          supabase.from("posts").select("id").or(`title.ilike.${term},notes.ilike.${term}`),
+          supabase
+            .from("post_topics")
+            .select("post_id, topics!inner(name)")
+            .ilike("topics.name", term),
+        ]);
+      if (e1) throw new Error(e1.message);
+      if (e2) throw new Error(e2.message);
+      const topicRows = (byTopic ?? []) as unknown as { post_id: string }[];
+      searchIds = new Set([
+        ...(byField ?? []).map((r) => r.id),
+        ...topicRows.map((r) => r.post_id),
       ]);
-    if (e1) throw new Error(e1.message);
-    if (e2) throw new Error(e2.message);
-    const topicRows = (byTopic ?? []) as unknown as { post_id: string }[];
-    searchIds = new Set([
-      ...(byField ?? []).map((r) => r.id),
-      ...topicRows.map((r) => r.post_id),
-    ]);
+    }
     if (searchIds.size === 0) return [];
   }
 
@@ -263,6 +314,53 @@ export async function getPost(id: string) {
       .map((pt) => pt.topics as Topic),
     pendings: (row.pendings ?? []).slice().sort(byDoneThenDate),
   };
+}
+
+// Ranking de "quién sabe de esto": contactos tagueados con el tema (peso
+// fuerte) más contactos mencionados con @ en notas de posts/contactos
+// tagueados con ese tema (peso débil, uno por mención).
+export async function getTopicExperts(topicId: string, limit = 5) {
+  const supabase = getSupabase();
+
+  const [{ data: taggedContacts, error: e1 }, { data: taggedPosts, error: e2 }] =
+    await Promise.all([
+      supabase.from("contact_topics").select("contact_id, contacts(notes)").eq("topic_id", topicId),
+      supabase.from("post_topics").select("post_id, posts(notes)").eq("topic_id", topicId),
+    ]);
+  if (e1) throw new Error(e1.message);
+  if (e2) throw new Error(e2.message);
+
+  type TaggedContactRow = { contact_id: string; contacts: { notes: string | null } | null };
+  type TaggedPostRow = { post_id: string; posts: { notes: string | null } | null };
+  const contactRows = (taggedContacts ?? []) as unknown as TaggedContactRow[];
+  const postRows = (taggedPosts ?? []) as unknown as TaggedPostRow[];
+
+  const score = new Map<string, number>();
+  for (const row of contactRows) {
+    score.set(row.contact_id, (score.get(row.contact_id) ?? 0) + 2);
+  }
+  for (const row of contactRows) {
+    for (const id of extractMentionedIds(row.contacts?.notes ?? "")) {
+      score.set(id, (score.get(id) ?? 0) + 1);
+    }
+  }
+  for (const row of postRows) {
+    for (const id of extractMentionedIds(row.posts?.notes ?? "")) {
+      score.set(id, (score.get(id) ?? 0) + 1);
+    }
+  }
+  if (score.size === 0) return [];
+
+  const { data: contacts, error: e3 } = await supabase
+    .from("contacts")
+    .select("id, name")
+    .in("id", [...score.keys()]);
+  if (e3) throw new Error(e3.message);
+
+  return (contacts ?? [])
+    .map((c) => ({ id: c.id, name: c.name, score: score.get(c.id) ?? 0 }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
 }
 
 export async function getContactMentions(contactId: string) {

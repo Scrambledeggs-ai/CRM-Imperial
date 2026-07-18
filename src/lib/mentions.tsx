@@ -5,6 +5,18 @@ import type { ReactNode } from "react";
 // así sobrevive a que renombres al contacto más adelante.
 const MENTION_RE = /@\[([^\]]+)\]\(([a-f0-9-]{36})\)/g;
 
+// Todos los IDs de contacto mencionados en un texto, en orden de aparición
+// (puede repetirse si el mismo contacto se menciona más de una vez).
+export function extractMentionedIds(text: string): string[] {
+  const ids: string[] = [];
+  MENTION_RE.lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = MENTION_RE.exec(text)) !== null) {
+    ids.push(match[2]);
+  }
+  return ids;
+}
+
 // Detecta si el cursor está en medio de escribir una mención (después de un
 // "@" sin espacio ni cierre todavía) y devuelve dónde empieza y qué se
 // escribió hasta ahora, para buscar contactos que matcheen.

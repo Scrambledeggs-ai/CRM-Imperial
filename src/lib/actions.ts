@@ -216,6 +216,55 @@ export async function deletePending(pendingId: string) {
   );
 }
 
+// Se llama al entrar a /app/pendientes (ver OverdueChecker.tsx). Avisa por
+// webhook los pendientes vencidos que todavía no avisaron, una sola vez cada
+// uno — overdue_notified evita mandar el mismo aviso en cada visita.
+export async function checkOverduePendings() {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("pendings")
+    .select("id, text, due_date, contact_id, post_id, contacts(name), posts(title)")
+    .eq("done", false)
+    .eq("overdue_notified", false)
+    .lt("due_date", new Date().toISOString());
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) return;
+
+  type Row = {
+    id: string;
+    text: string;
+    due_date: string | null;
+    contact_id: string | null;
+    post_id: string | null;
+    contacts: { name: string } | null;
+    posts: { title: string } | null;
+  };
+  const rows = data as unknown as Row[];
+
+  for (const row of rows) {
+    const target: PendingTarget = row.contact_id
+      ? { contactId: row.contact_id }
+      : { postId: row.post_id! };
+    const owner = pendingOwnerColumn(target);
+    await fireWebhook("pending.overdue", {
+      type: owner.type,
+      id: owner.id,
+      name: row.contacts?.name ?? row.posts?.title ?? null,
+      pending_action: row.text,
+      pending_date: row.due_date,
+    });
+  }
+
+  const { error: updateError } = await supabase
+    .from("pendings")
+    .update({ overdue_notified: true })
+    .in(
+      "id",
+      rows.map((r) => r.id),
+    );
+  if (updateError) throw new Error(updateError.message);
+}
+
 export async function updateContactTopics(contactId: string, raw: string) {
   const names = parseTopicNames(raw);
   const supabase = getSupabase();

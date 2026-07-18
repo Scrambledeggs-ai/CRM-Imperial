@@ -15,7 +15,7 @@ export function SearchBox({
           type="search"
           name="search"
           defaultValue={search}
-          placeholder="Buscar por nombre, título, nota o tema…"
+          placeholder="Buscar por nombre, título, nota, tema o @mención…"
           className="w-full bg-panel border border-panel-border rounded-[var(--radius-control)] px-3 py-2 text-sm outline-none focus:border-accent"
         />
       </form>

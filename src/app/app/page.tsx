@@ -1,4 +1,5 @@
-import { getContacts, getPosts, getTopicsWithCounts } from "@/lib/queries";
+import Link from "next/link";
+import { getContacts, getPosts, getTopicExperts, getTopicsWithCounts } from "@/lib/queries";
 import { TopicFilterChips } from "./TopicFilterChips";
 import { SearchBox } from "./SearchBox";
 import { ContactCard } from "./ContactCard";
@@ -11,10 +12,11 @@ export default async function AppHome({
 }) {
   const { topic: topicId, search } = await searchParams;
 
-  const [topics, contacts, posts] = await Promise.all([
+  const [topics, contacts, posts, experts] = await Promise.all([
     getTopicsWithCounts(),
     getContacts(topicId, search),
     getPosts(topicId, search),
+    topicId ? getTopicExperts(topicId) : Promise.resolve([]),
   ]);
 
   return (
@@ -30,6 +32,25 @@ export default async function AppHome({
         <SearchBox search={search} topicId={topicId} />
         <TopicFilterChips topics={topics} activeTopicId={topicId} basePath="/app" />
       </div>
+
+      {topicId && experts.length > 0 && (
+        <div className="rounded-[var(--radius-panel)] border border-panel-border bg-panel p-4">
+          <h2 className="font-mono text-[13px] uppercase tracking-wide text-muted mb-2">
+            Quién sabe de esto
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {experts.map((e) => (
+              <Link
+                key={e.id}
+                href={`/app/contactos/${e.id}`}
+                className="text-sm px-3 py-1.5 rounded-full border border-panel-border hover:border-accent"
+              >
+                {e.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <section className="grid gap-8 sm:grid-cols-2">
         <div className="flex flex-col gap-3">
