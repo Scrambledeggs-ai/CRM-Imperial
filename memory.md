@@ -46,11 +46,20 @@ Se construyó completo el plan que estaba en "en curso":
 
 **Sigue sin hacer falta** un botón "Editar contacto/post" que reabra la ficha completa — la ficha ya creada tiene todos los campos visibles y editables en el lugar (doble-click), patrón que el usuario prefiere.
 
+## Menciones @ en el modal de captura rápida — terminado (2026-07-18)
+
+El campo Nota del modal (+Contacto/+Post) era un textarea plano desde que existen las menciones — nunca estuvo conectado a `EditableField`, así que el autocompletado de `@` solo funcionaba editando la ficha ya creada, no al crear. El usuario lo interpretó como una regresión ("andaba y dejó de andar") hasta que se confirmó con el historial de git que nunca estuvo cableado ahí.
+
+Fix (rama `feat/menciones-captura-rapida`, mergeada a `main` en fast-forward): se sacó `findActiveMention` de `EditableField.tsx` a `src/lib/mentions.tsx` (ya tenía `renderWithMentions`, queda como el archivo compartido de lógica de menciones) y se creó `MentionTextarea.tsx` — mismo comportamiento de detectar `@` y mostrar `MentionDropdown`, pero como campo siempre-editable (controlado, con `name` para que lo lea el `FormData` del form nativo) en vez del patrón ver/editar de `EditableField`. Probado a mano contra producción vía `npm run dev` local (mismo Supabase) antes del merge.
+
+**Pendiente, aparte de este build:** un error de hidratación preexistente (no introducido por este fix) en `src/app/layout.tsx` — el script anti-parpadeo de tema oscuro/claro pisa `classList` del `<html>` antes de hidratar y no tiene `suppressHydrationWarning`, por eso el overlay de Next.js marca 1 issue en consola. Y los 7 errores de lint preexistentes en `ThemeToggle.tsx`, `compartir/page.tsx` y `MergeTopicsForm.tsx` (ver historial arriba) — ninguno de los dos se tocó en este build, a propósito.
+
 ## Gotchas específicos de este proyecto
 
 - **Vercel marca las env vars como "sensibles" (write-only) por defecto en Production**, aunque no lo pida explícitamente — si una var vuelve vacía después de cargada, es la causa más probable. Arreglar con `vercel env rm <name> <env> --yes` + `vercel env add <name> <env> --no-sensitive --force --value "..."`.
 - Procesos en background con `&`/`nohup`/`disown` no sobreviven entre llamadas de Bash en este entorno — usar el parámetro nativo de background de la herramienta.
-- `CRM Imperial.pdf` y la carpeta `capturas/` en la raíz quedan fuera del repo a propósito (material del post del concurso, no código).
+- `CRM Imperial.pdf` y la carpeta `capturas/` (material del post del concurso, no código) se movieron fuera del repo, a `../CRM-Imperial-historial/` (carpeta hermana en `agency-stack/projects/`, sin git) — ya no aparecen como untracked.
+- `bitacora-decisiones.html` u otros cambios sueltos que ya estén modificados sin commitear al empezar una tarea quedan **fuera** de cualquier commit de esa tarea por defecto, sin necesidad de volver a preguntarlo — solo se comitea lo que pertenece al alcance de la tarea en curso.
 
 ## Cómo prefiere trabajar el usuario en este proyecto
 
