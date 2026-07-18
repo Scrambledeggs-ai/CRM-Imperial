@@ -5,6 +5,21 @@ import type { ReactNode } from "react";
 // así sobrevive a que renombres al contacto más adelante.
 const MENTION_RE = /@\[([^\]]+)\]\(([a-f0-9-]{36})\)/g;
 
+// Detecta si el cursor está en medio de escribir una mención (después de un
+// "@" sin espacio ni cierre todavía) y devuelve dónde empieza y qué se
+// escribió hasta ahora, para buscar contactos que matcheen.
+export function findActiveMention(
+  text: string,
+  cursor: number,
+): { start: number; query: string } | null {
+  const upToCursor = text.slice(0, cursor);
+  const at = upToCursor.lastIndexOf("@");
+  if (at === -1) return null;
+  const between = upToCursor.slice(at + 1);
+  if (/[\s\]\)]/.test(between)) return null;
+  return { start: at, query: between };
+}
+
 export function renderWithMentions(text: string): ReactNode[] {
   const parts: ReactNode[] = [];
   let lastIndex = 0;

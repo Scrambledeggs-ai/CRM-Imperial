@@ -1,17 +1,8 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { renderWithMentions } from "@/lib/mentions";
+import { findActiveMention, renderWithMentions } from "@/lib/mentions";
 import { MentionDropdown } from "./MentionDropdown";
-
-function findActiveMention(text: string, cursor: number): { start: number; query: string } | null {
-  const upToCursor = text.slice(0, cursor);
-  const at = upToCursor.lastIndexOf("@");
-  if (at === -1) return null;
-  const between = upToCursor.slice(at + 1);
-  if (/[\s\]\)]/.test(between)) return null;
-  return { start: at, query: between };
-}
 
 export function EditableField({
   value,

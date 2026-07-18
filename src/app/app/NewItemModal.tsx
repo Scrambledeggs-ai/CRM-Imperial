@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { createContact, createPost } from "@/lib/actions";
+import { MentionTextarea } from "./MentionTextarea";
 
 export function NewItemModal({
   defaultTab,
@@ -92,7 +93,12 @@ export function NewItemModal({
             </label>
             <label className="flex flex-col gap-1">
               <span className={labelClass}>Nota</span>
-              <textarea name="notes" rows={3} className={inputClass} />
+              <MentionTextarea
+                name="notes"
+                rows={3}
+                className={inputClass}
+                placeholder="Escribí @ para mencionar a un contacto"
+              />
             </label>
             <PendingToggle
               wantsPending={wantsPending}
@@ -127,7 +133,12 @@ export function NewItemModal({
             </label>
             <label className="flex flex-col gap-1">
               <span className={labelClass}>Nota</span>
-              <textarea name="notes" rows={3} className={inputClass} />
+              <MentionTextarea
+                name="notes"
+                rows={3}
+                className={inputClass}
+                placeholder="Escribí @ para mencionar a un contacto"
+              />
             </label>
             <PendingToggle
               wantsPending={wantsPending}
