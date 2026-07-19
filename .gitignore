@@ -40,3 +40,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# documentos internos de trabajo (no publicar en el repo)
+NEXT_STEPS.md
+memory.md
+bitacora-decisiones.html
+/CRM-Imperial-front-end/
+CLAUDE.md
+AGENTS.md
